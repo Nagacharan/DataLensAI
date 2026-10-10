@@ -76,6 +76,18 @@ export function AskDataTab() {
                 {s.question}
               </button>
             ))}
+            <button
+              onClick={() => handleAskQuestion('What is standard deviation and IQR?')}
+              className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-brand-500/60 hover:bg-brand-500/10 text-xs text-slate-300 transition text-left"
+            >
+              What is standard deviation and IQR?
+            </button>
+            <button
+              onClick={() => handleAskQuestion('What are the key limitations of this dataset?')}
+              className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-brand-500/60 hover:bg-brand-500/10 text-xs text-slate-300 transition text-left"
+            >
+              What are the limitations of this dataset?
+            </button>
           </div>
         </div>
       </div>

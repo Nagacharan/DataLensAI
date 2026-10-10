@@ -79,9 +79,14 @@ export function MLPrepTab() {
               <Sliders className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">Prediction-Ready Feature Engineering</h2>
-              <p className="text-xs text-slate-400">
-                Prepare tabular datasets for machine learning workflows (No model training or automated predictions).
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white">Prediction-Ready Feature Engineering</h2>
+                <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-semibold uppercase">
+                  Optional Advanced Workflow
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Prepare tabular datasets for external ML model training. This workflow is completely optional and separate from the primary exploratory analytics dashboard. No ML models are trained inside this application.
               </p>
             </div>
           </div>

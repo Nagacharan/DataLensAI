@@ -12,15 +12,21 @@ import {
   RefreshCw,
   Sliders,
   CheckCircle2,
+  ShieldCheck,
   ShieldAlert,
-  ArrowRight,
+  ChevronDown,
+  ChevronUp,
   History,
+  Info,
 } from 'lucide-react';
 
 export function CleaningTab() {
   const {
     activeDataset,
     profile,
+    qualityRecommendations,
+    applyAllQualityRecommendations,
+    applySingleQualityRecommendation,
     cleaningHistory,
     applyCleaningAction,
     undoLastAction,
@@ -28,7 +34,10 @@ export function CleaningTab() {
     resetToRaw,
   } = useDataset();
 
-  // Active form state for operations
+  // Collapsible state for advanced manual controls (secondary section)
+  const [showAdvancedManual, setShowAdvancedManual] = useState(false);
+
+  // Manual form state
   const [selectedMissingCol, setSelectedMissingCol] = useState(
     profile?.columns.find(c => c.nullCount > 0)?.name || profile?.columns[0]?.name || ''
   );
@@ -83,24 +92,27 @@ export function CleaningTab() {
     }
   };
 
-  const missingColumns = profile.columns.filter(c => c.nullCount > 0);
-  const outlierColumns = profile.columns.filter(c => c.outlierCount > 0);
-
   return (
     <div className="space-y-6">
-      {/* Top Banner: Scorecard and Undo/Reset Bar */}
+      {/* 1. Header Banner & Audit Controls */}
       <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-brand-500/10 text-brand-400 border border-brand-500/20">
-              <Wand2 className="w-6 h-6" />
+        <div className="flex items-center gap-3.5">
+          <div className="p-2.5 rounded-xl bg-brand-500/10 text-brand-400 border border-brand-500/20">
+            <ShieldCheck className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold text-white">Automated Data Quality & Hygiene</h2>
+              <Badge
+                variant={profile.dataQualityScore >= 85 ? 'success' : profile.dataQualityScore >= 65 ? 'warning' : 'danger'}
+                size="xs"
+              >
+                Health: {profile.dataQualityScore}/100
+              </Badge>
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-white">Data Quality & Cleaning Studio</h2>
-              <p className="text-xs text-slate-400">
-                Fix missing values, purge duplicates, calibrate data types, and normalize IQR outliers safely.
-              </p>
-            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Automated anomaly diagnosis with tailored recommendations. Review and approve fixes in 1-click.
+            </p>
           </div>
         </div>
 
@@ -126,240 +138,89 @@ export function CleaningTab() {
         </div>
       </div>
 
-      {/* Cleaning Action Panels Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 1. Missing Value Imputation */}
-        <Card
-          title="Missing Values Imputation"
-          subtitle={`${profile.totalMissingCells} missing cells across ${missingColumns.length} column(s)`}
-          icon={AlertTriangle}
-          className="border-amber-500/20"
-        >
-          <div className="space-y-4">
-            {missingColumns.length === 0 ? (
-              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>Zero missing values! All columns in the current dataset are 100% complete.</span>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-semibold text-slate-400 block mb-1">Target Column:</label>
-                  <select
-                    value={selectedMissingCol}
-                    onChange={(e) => setSelectedMissingCol(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
-                  >
-                    {profile.columns.map(c => (
-                      <option key={c.name} value={c.name}>
-                        {c.name} ({c.nullCount} missing, {c.type})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-400 block mb-1">Imputation Strategy:</label>
-                  <select
-                    value={missingStrategy}
-                    onChange={(e) => setMissingStrategy(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
-                  >
-                    <option value="mean">Mean Imputation (Numerical average)</option>
-                    <option value="median">Median Imputation (Robust to skew)</option>
-                    <option value="mode">Mode Imputation (Most frequent category)</option>
-                    <option value="constant">Constant Replacement</option>
-                    <option value="drop_row">Drop Rows with Missing Values</option>
-                  </select>
-                </div>
-
-                {missingStrategy === 'constant' && (
-                  <div>
-                    <label className="text-xs font-semibold text-slate-400 block mb-1">Constant Value:</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 0 or 'Unknown'"
-                      value={constantVal}
-                      onChange={(e) => setConstantVal(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
-                    />
-                  </div>
-                )}
-
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleApplyMissing}
-                  className="w-full mt-2"
-                >
-                  Apply Missing Value Fix
-                </Button>
-              </div>
-            )}
-          </div>
-        </Card>
-
-        {/* 2. Duplicate Records Handling */}
-        <Card
-          title="Duplicate Row Removal"
-          subtitle="Detect and purge completely identical rows across all attributes"
-          icon={Copy}
-          className="border-blue-500/20"
-        >
-          <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-400">Identified Duplicates:</span>
-                <span className="text-sm font-bold text-slate-100 font-mono">
-                  {profile.duplicateRowsCount} ({profile.duplicateRowsPercent}%)
-                </span>
-              </div>
-              <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className={`h-full ${profile.duplicateRowsCount > 0 ? 'bg-amber-400' : 'bg-emerald-400'}`}
-                  style={{ width: `${Math.min(100, profile.duplicateRowsPercent * 5)}%` }}
-                />
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Completely duplicated rows can artificially distort distributions and introduce bias into summary aggregates and machine learning pipelines.
-            </p>
-
+      {/* 2. Automated Recommendations Section (Primary Focus) */}
+      <Card
+        title="Tailored Quality Recommendations"
+        subtitle="Context-aware fixes generated by statistical inspection of distributions and column semantics"
+        icon={Wand2}
+        className="border-amber-500/30"
+        action={
+          qualityRecommendations.length > 0 && (
             <Button
-              variant={profile.duplicateRowsCount > 0 ? 'primary' : 'secondary'}
+              variant="primary"
               size="sm"
-              disabled={profile.duplicateRowsCount === 0}
-              onClick={handleRemoveDuplicates}
-              className="w-full"
+              onClick={applyAllQualityRecommendations}
+              icon={Wand2}
+              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold"
             >
-              Purge {profile.duplicateRowsCount} Duplicate Row(s)
+              Apply All Fixes ({qualityRecommendations.length})
             </Button>
-          </div>
-        </Card>
-
-        {/* 3. Outlier Detection & Capping (IQR) */}
-        <Card
-          title="Statistical Outliers (IQR Method)"
-          subtitle="Tukey 1.5x Interquartile Range boundary detection"
-          icon={ShieldAlert}
-          className="border-rose-500/20"
-        >
-          <div className="space-y-4">
-            {outlierColumns.length === 0 ? (
-              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>No statistical outliers detected beyond 1.5x IQR boundaries.</span>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-semibold text-slate-400 block mb-1">Target Numeric Feature:</label>
-                  <select
-                    value={selectedOutlierCol}
-                    onChange={(e) => setSelectedOutlierCol(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
-                  >
-                    {profile.columns.filter(c => c.type === 'number').map(c => (
-                      <option key={c.name} value={c.name}>
-                        {c.name} ({c.outlierCount} outliers)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-400 block mb-1">Outlier Action:</label>
-                  <select
-                    value={outlierAction}
-                    onChange={(e) => setOutlierAction(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
-                  >
-                    <option value="cap">Cap Outliers (Winsorize to [Q1 - 1.5IQR, Q3 + 1.5IQR])</option>
-                    <option value="remove_row">Remove Outlier Rows from Dataset</option>
-                  </select>
-                </div>
-
-                <p className="text-[11px] text-slate-500">
-                  Winsorization preserves overall sample size by adjusting extreme values to the nearest valid fence without data loss.
-                </p>
-
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleApplyOutlier}
-                  className="w-full"
-                >
-                  Apply Outlier Treatment
-                </Button>
-              </div>
-            )}
-          </div>
-        </Card>
-
-        {/* 4. Type Casting & Column Dropping */}
-        <Card
-          title="Data Type Calibration & Column Management"
-          subtitle="Re-cast column types or prune unnecessary attributes"
-          icon={Sliders}
-          className="border-purple-500/20"
-        >
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-400 block">Convert Data Type:</label>
-              <div className="flex gap-2">
-                <select
-                  value={selectedTypeCol}
-                  onChange={(e) => setSelectedTypeCol(e.target.value)}
-                  className="flex-1 bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
-                >
-                  {profile.columns.map(c => (
-                    <option key={c.name} value={c.name}>
-                      {c.name} ({c.type})
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={targetType}
-                  onChange={(e) => setTargetType(e.target.value)}
-                  className="w-28 bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
-                >
-                  <option value="number">Number</option>
-                  <option value="date">Date</option>
-                  <option value="string">String</option>
-                  <option value="boolean">Boolean</option>
-                </select>
-                <Button variant="secondary" size="sm" onClick={handleApplyTypeConvert}>
-                  Cast
-                </Button>
-              </div>
+          )
+        }
+      >
+        {qualityRecommendations.length === 0 ? (
+          <div className="py-8 text-center space-y-2">
+            <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-6 h-6" />
             </div>
-
-            <div className="pt-3 border-t border-slate-800 space-y-2">
-              <label className="text-xs font-semibold text-slate-400 block">Drop Column:</label>
-              <div className="flex gap-2">
-                <select
-                  value={selectedDropCol}
-                  onChange={(e) => setSelectedDropCol(e.target.value)}
-                  className="flex-1 bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
+            <h4 className="font-semibold text-slate-100 text-sm">No Quality Issues Detected</h4>
+            <p className="text-xs text-slate-400 max-w-md mx-auto">
+              Your dataset is clean and ready. There are 0 missing cells, 0 duplicate rows, and no severe unmitigated distribution anomalies.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {qualityRecommendations.map((rec) => (
+                <div
+                  key={rec.id}
+                  className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between space-y-3 hover:border-slate-700 transition"
                 >
-                  {profile.columns.map(c => (
-                    <option key={c.name} value={c.name}>{c.name}</option>
-                  ))}
-                </select>
-                <Button variant="danger" size="sm" onClick={handleDropColumn} icon={Trash2}>
-                  Drop
-                </Button>
-              </div>
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-semibold text-sm text-slate-100">{rec.title}</span>
+                      <Badge
+                        variant={rec.impact === 'High' ? 'danger' : rec.impact === 'Medium' ? 'warning' : 'neutral'}
+                        size="xs"
+                      >
+                        {rec.impact} Impact
+                      </Badge>
+                    </div>
+
+                    <p className="text-xs text-amber-300 font-medium">{rec.issue}</p>
+
+                    <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-850 text-xs space-y-1">
+                      <div className="flex items-center gap-1.5 text-slate-300">
+                        <span className="font-semibold text-brand-300">Action:</span>
+                        <span>{rec.suggestedAction}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        <span className="font-semibold text-slate-500">Rationale: </span>
+                        {rec.rationale}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex justify-end">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => applySingleQualityRecommendation(rec.id)}
+                    >
+                      Approve & Apply
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </Card>
-      </div>
+        )}
+      </Card>
 
-      {/* Cleaning History & Transformation Audit Trail */}
+      {/* 3. Transformation Audit Trail */}
       <Card
         title="Audit Trail of Applied Operations"
-        subtitle={`Chronological log of all data modifications applied to "${activeDataset.fileName}"`}
+        subtitle="Chronological log of transformations applied to the active dataset"
         icon={History}
       >
         {cleaningHistory.length === 0 ? (
@@ -388,6 +249,128 @@ export function CleaningTab() {
           </div>
         )}
       </Card>
+
+      {/* 4. Advanced Manual Controls (Secondary Expandable Section) */}
+      <div className="border border-slate-800 rounded-xl overflow-hidden glass-card">
+        <button
+          onClick={() => setShowAdvancedManual(prev => !prev)}
+          className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-slate-800/40 transition"
+        >
+          <div className="flex items-center gap-3">
+            <Sliders className="w-4 h-4 text-slate-400" />
+            <div>
+              <h3 className="text-sm font-semibold text-slate-200">
+                Advanced Manual Cleaning Tools (Optional)
+              </h3>
+              <p className="text-xs text-slate-500">
+                Granular manual controls for custom column imputation, manual type casting, and column pruning.
+              </p>
+            </div>
+          </div>
+          {showAdvancedManual ? (
+            <ChevronUp className="w-5 h-5 text-slate-400" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-slate-400" />
+          )}
+        </button>
+
+        {showAdvancedManual && (
+          <div className="p-5 border-t border-slate-800 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Custom Missing Imputation */}
+              <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-3">
+                <h4 className="text-xs font-semibold uppercase text-slate-400">Manual Missing Imputation</h4>
+                <div>
+                  <label className="text-xs text-slate-400 block mb-1">Target Column:</label>
+                  <select
+                    value={selectedMissingCol}
+                    onChange={(e) => setSelectedMissingCol(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
+                  >
+                    {profile.columns.map(c => (
+                      <option key={c.name} value={c.name}>
+                        {c.name} ({c.nullCount} missing, {c.type})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 block mb-1">Imputation Strategy:</label>
+                  <select
+                    value={missingStrategy}
+                    onChange={(e) => setMissingStrategy(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
+                  >
+                    <option value="mean">Mean (Numerical Average)</option>
+                    <option value="median">Median (Robust to Skew)</option>
+                    <option value="mode">Mode (Most Frequent)</option>
+                    <option value="constant">Constant Replacement</option>
+                    <option value="drop_row">Drop Rows with Missing</option>
+                  </select>
+                </div>
+                {missingStrategy === 'constant' && (
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="e.g. 0 or 'Unknown'"
+                      value={constantVal}
+                      onChange={(e) => setConstantVal(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
+                    />
+                  </div>
+                )}
+                <Button variant="secondary" size="sm" onClick={handleApplyMissing} className="w-full">
+                  Apply Custom Imputation
+                </Button>
+              </div>
+
+              {/* Type Casting & Column Dropping */}
+              <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-3">
+                <h4 className="text-xs font-semibold uppercase text-slate-400">Manual Type Casting & Pruning</h4>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedTypeCol}
+                    onChange={(e) => setSelectedTypeCol(e.target.value)}
+                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
+                  >
+                    {profile.columns.map(c => (
+                      <option key={c.name} value={c.name}>{c.name} ({c.type})</option>
+                    ))}
+                  </select>
+                  <select
+                    value={targetType}
+                    onChange={(e) => setTargetType(e.target.value)}
+                    className="w-28 bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
+                  >
+                    <option value="number">Number</option>
+                    <option value="date">Date</option>
+                    <option value="string">String</option>
+                    <option value="boolean">Boolean</option>
+                  </select>
+                  <Button variant="secondary" size="sm" onClick={handleApplyTypeConvert}>
+                    Cast
+                  </Button>
+                </div>
+
+                <div className="pt-2 border-t border-slate-850 flex gap-2">
+                  <select
+                    value={selectedDropCol}
+                    onChange={(e) => setSelectedDropCol(e.target.value)}
+                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
+                  >
+                    {profile.columns.map(c => (
+                      <option key={c.name} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                  <Button variant="danger" size="sm" onClick={handleDropColumn} icon={Trash2}>
+                    Drop
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

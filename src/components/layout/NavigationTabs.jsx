@@ -1,45 +1,74 @@
 import React from 'react';
 import { useDataset } from '../../context/DatasetContext';
 import {
+  Brain,
   BarChart3,
+  ShieldCheck,
   Sparkles,
-  Layers,
-  Wand2,
-  Sliders,
   HelpCircle,
   FileCheck2,
-  Table,
+  Sliders,
 } from 'lucide-react';
 
 export function NavigationTabs() {
-  const { activeTab, setActiveTab, cleaningHistory, mlPrepLog, insights, profile } = useDataset();
+  const {
+    activeTab,
+    setActiveTab,
+    qualityRecommendations,
+    cleaningHistory,
+    insights,
+    mlPrepLog,
+  } = useDataset();
 
   const tabs = [
-    { id: 'overview', label: 'Dataset Overview', icon: Table },
+    {
+      id: 'overview',
+      label: 'Analyst Overview',
+      icon: Brain,
+      description: 'Automated understanding & summary',
+    },
+    {
+      id: 'dashboard',
+      label: 'Visual Analytics',
+      icon: BarChart3,
+      description: 'Auto-generated charts & filters',
+    },
     {
       id: 'quality',
-      label: 'Data Cleaning',
-      icon: Wand2,
-      badge: cleaningHistory.length > 0 ? cleaningHistory.length : null,
-      badgeColor: 'bg-brand-500/20 text-brand-400',
+      label: 'Data Quality',
+      icon: ShieldCheck,
+      badge: qualityRecommendations.length > 0 ? `${qualityRecommendations.length} fixes` : null,
+      badgeColor: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+      description: 'Health audit & 1-click fixes',
     },
-    {
-      id: 'preparation',
-      label: 'ML Preparation',
-      icon: Sliders,
-      badge: mlPrepLog.length > 0 ? mlPrepLog.length : null,
-      badgeColor: 'bg-purple-500/20 text-purple-400',
-    },
-    { id: 'dashboard', label: 'Analytics Dashboard', icon: BarChart3 },
     {
       id: 'insights',
       label: 'AI Insights',
       icon: Sparkles,
       badge: insights.length > 0 ? insights.length : null,
       badgeColor: 'bg-accent-500/20 text-accent-400',
+      description: 'Statistical findings & evidence',
     },
-    { id: 'ask', label: 'Ask Your Data', icon: HelpCircle },
-    { id: 'reports', label: 'Executive Report', icon: FileCheck2 },
+    {
+      id: 'ask',
+      label: 'Ask Your Data',
+      icon: HelpCircle,
+      description: 'Conversational analytics co-pilot',
+    },
+    {
+      id: 'reports',
+      label: 'Executive PDF',
+      icon: FileCheck2,
+      description: 'Download audited PDF dossier',
+    },
+    {
+      id: 'preparation',
+      label: 'ML Prep (Optional)',
+      icon: Sliders,
+      badge: mlPrepLog.length > 0 ? mlPrepLog.length : 'Opt',
+      badgeColor: 'bg-slate-800 text-slate-400',
+      description: 'Feature engineering for ML',
+    },
   ];
 
   return (

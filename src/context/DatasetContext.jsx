@@ -1,20 +1,26 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { profileDataset } from '../utils/analysis/statistics';
-import { generateDeterministicInsights } from '../utils/insights/deterministicInsightEngine';
-import { getEnhancedInsights, askDatasetQuestion, fetchServerConfig } from '../services/aiService';
+import { profileDataset } from '../utils/analysis/statistics.js';
+import { buildDatasetUnderstanding } from '../utils/analysis/semanticProfiler.js';
+import {
+  generateQualityRecommendations,
+  applyRecommendationsBatch,
+} from '../utils/data-cleaning/recommendations.js';
+import { runAutomatedAnalysis } from '../utils/analysis/automatedAnalyst.js';
+import { generateDeterministicInsights } from '../utils/insights/deterministicInsightEngine.js';
+import { getEnhancedInsights, askDatasetQuestion, fetchServerConfig } from '../services/aiService.js';
 import {
   removeDuplicates,
   handleMissingValues,
   convertColumnType,
   handleOutliers,
   dropColumn,
-} from '../utils/data-cleaning/cleaner';
+} from '../utils/data-cleaning/cleaner.js';
 import {
   encodeCategorical,
   scaleNumerical,
   deriveDateFeatures,
   inspectFeaturesForML,
-} from '../utils/data-preparation/mlPreparer';
+} from '../utils/data-preparation/mlPreparer.js';
 
 const DatasetContext = createContext(null);
 
@@ -22,6 +28,9 @@ export function DatasetProvider({ children }) {
   const [rawDataset, setRawDataset] = useState(null);
   const [activeDataset, setActiveDataset] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [semanticUnderstanding, setSemanticUnderstanding] = useState(null);
+  const [qualityRecommendations, setQualityRecommendations] = useState([]);
+  const [automatedAnalysis, setAutomatedAnalysis] = useState(null);
   const [cleaningHistory, setCleaningHistory] = useState([]);
   const [historyStack, setHistoryStack] = useState([]); // for undo
 
@@ -31,6 +40,7 @@ export function DatasetProvider({ children }) {
   const [mlTargetColumn, setMlTargetColumn] = useState(null);
 
   // Navigation & UI state
+  // Default tab is 'overview' (the intelligent executive analyst briefing)
   const [activeTab, setActiveTab] = useState('overview');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -49,13 +59,20 @@ export function DatasetProvider({ children }) {
     fetchServerConfig().then(cfg => setServerConfig(cfg));
   }, []);
 
-  // When active dataset changes, update profile and generate insights
+  // When active dataset changes, update profile, semantic understanding, recommendations, and automated analysis
   const updateActiveData = (newDataset, newHistory = null) => {
     setIsLoading(true);
     try {
       const newProfile = profileDataset(newDataset);
+      const semUnderstanding = buildDatasetUnderstanding(newDataset, newProfile);
+      const recs = generateQualityRecommendations(newDataset, newProfile);
+      const autoAnalysis = runAutomatedAnalysis(newDataset, newProfile, semUnderstanding);
+
       setActiveDataset(newDataset);
       setProfile(newProfile);
+      setSemanticUnderstanding(semUnderstanding);
+      setQualityRecommendations(recs);
+      setAutomatedAnalysis(autoAnalysis);
 
       if (newHistory) {
         setCleaningHistory(newHistory);
@@ -91,7 +108,7 @@ export function DatasetProvider({ children }) {
       {
         id: 'welcome',
         sender: 'assistant',
-        text: `Welcome! I've loaded "${normalized.fileName}". Ask me any question, explore key statistics, or try one of the suggested prompts below.`,
+        text: `Welcome! I've loaded and analyzed "${normalized.fileName}". I've automatically profiled its structure, generated visualizations, and extracted key insights. Ask me any question or explore the executive briefing below.`,
         timestamp: new Date().toLocaleTimeString(),
         evidence: null,
       },
@@ -101,7 +118,35 @@ export function DatasetProvider({ children }) {
     setActiveTab('overview');
   };
 
-  // Cleaning Actions
+  // Automated 1-Click Quality Cleaning
+  const applyAllQualityRecommendations = () => {
+    if (!activeDataset || qualityRecommendations.length === 0) return;
+    try {
+      setHistoryStack(prev => [...prev, activeDataset]);
+      const res = applyRecommendationsBatch(activeDataset, qualityRecommendations);
+      const newHistory = [...cleaningHistory, ...res.transformations];
+      updateActiveData(res.dataset, newHistory);
+    } catch (err) {
+      setError(`Failed to apply recommendations: ${err.message}`);
+    }
+  };
+
+  const applySingleQualityRecommendation = (recId) => {
+    if (!activeDataset) return;
+    const rec = qualityRecommendations.find(r => r.id === recId);
+    if (!rec) return;
+
+    try {
+      setHistoryStack(prev => [...prev, activeDataset]);
+      const res = applyRecommendationsBatch(activeDataset, [rec]);
+      const newHistory = [...cleaningHistory, ...res.transformations];
+      updateActiveData(res.dataset, newHistory);
+    } catch (err) {
+      setError(`Failed to apply recommendation: ${err.message}`);
+    }
+  };
+
+  // Manual Cleaning Actions
   const applyCleaningAction = (actionType, params) => {
     if (!activeDataset) return;
     setError(null);
@@ -145,7 +190,7 @@ export function DatasetProvider({ children }) {
     updateActiveData(rawDataset, []);
   };
 
-  // ML Preparation Actions
+  // ML Preparation Actions (Optional Workflow)
   const initMLDataset = () => {
     if (!mlPreparedDataset && activeDataset) {
       setMlPreparedDataset({ ...activeDataset });
@@ -282,6 +327,9 @@ export function DatasetProvider({ children }) {
         rawDataset,
         activeDataset,
         profile,
+        semanticUnderstanding,
+        qualityRecommendations,
+        automatedAnalysis,
         cleaningHistory,
         canUndo: historyStack.length > 1,
         mlPreparedDataset: mlPreparedDataset || activeDataset,
@@ -305,6 +353,8 @@ export function DatasetProvider({ children }) {
         filters,
         setFilters,
         loadDataset,
+        applyAllQualityRecommendations,
+        applySingleQualityRecommendation,
         applyCleaningAction,
         undoLastAction,
         resetToRaw,
