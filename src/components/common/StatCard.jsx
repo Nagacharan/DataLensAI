@@ -10,34 +10,34 @@ export function StatCard({
   className = '',
 }) {
   const iconColors = {
-    brand: 'bg-brand-500/10 text-brand-400 border-brand-500/20',
-    emerald: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    purple: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-    amber: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    rose: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+    brand: 'bg-orange-50 text-coral-500 border-orange-100',
+    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+    purple: 'bg-purple-50 text-purple-600 border-purple-100',
+    amber: 'bg-amber-50 text-amber-600 border-amber-100',
+    rose: 'bg-rose-50 text-rose-600 border-rose-100',
   };
 
   return (
-    <div className={`glass-card rounded-xl p-5 border border-slate-800/80 hover:border-slate-700/80 transition-all ${className}`}>
+    <div className={`bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all ${className}`}>
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium uppercase tracking-wider text-slate-400">{title}</span>
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{title}</span>
         {Icon && (
-          <div className={`p-2 rounded-lg border ${iconColors[variant] || iconColors.brand}`}>
+          <div className={`p-2 rounded-xl border ${iconColors[variant] || iconColors.brand}`}>
             <Icon className="w-4 h-4" />
           </div>
         )}
       </div>
 
-      <div className="mt-3 flex items-baseline gap-2">
-        <span className="text-2xl font-bold text-slate-100 tracking-tight">{value}</span>
+      <div className="mt-2.5 flex items-baseline gap-2">
+        <span className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">{value}</span>
         {trend && (
-          <span className={`text-xs font-semibold ${trend.positive ? 'text-emerald-400' : 'text-rose-400'}`}>
+          <span className={`text-xs font-semibold ${trend.positive ? 'text-emerald-500' : 'text-rose-500'}`}>
             {trend.positive ? '↑' : '↓'} {trend.text}
           </span>
         )}
       </div>
 
-      {subtext && <p className="mt-1 text-xs text-slate-400">{subtext}</p>}
+      {subtext && <p className="mt-1 text-xs text-slate-400 font-medium">{subtext}</p>}
     </div>
   );
 }

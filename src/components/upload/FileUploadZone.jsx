@@ -73,8 +73,8 @@ export function FileUploadZone({ onDatasetLoaded }) {
         onClick={() => !isLoading && fileInputRef.current?.click()}
         className={`relative border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all ${
           isDragging
-            ? 'border-brand-500 bg-brand-500/10 shadow-glow'
-            : 'border-slate-700/80 hover:border-slate-600 bg-slate-900/40 hover:bg-slate-900/70'
+            ? 'border-coral-500 bg-orange-50/70 shadow-sm'
+            : 'border-slate-200 hover:border-orange-300 bg-slate-50/60 hover:bg-orange-50/30'
         } ${isLoading ? 'pointer-events-none opacity-80' : ''}`}
       >
         <input
@@ -88,36 +88,36 @@ export function FileUploadZone({ onDatasetLoaded }) {
         <div className="flex flex-col items-center max-w-md mx-auto">
           {isLoading ? (
             <div className="flex flex-col items-center py-6">
-              <Loader2 className="w-12 h-12 text-brand-400 animate-spin mb-4" />
-              <h4 className="text-base font-semibold text-slate-100">Analyzing & Ingesting Dataset...</h4>
-              <p className="text-xs text-slate-400 mt-1">Deduplicating schema, inferring data types, and calculating health scores...</p>
+              <Loader2 className="w-12 h-12 text-coral-500 animate-spin mb-4" />
+              <h4 className="text-base font-semibold text-slate-900">Analyzing & Ingesting Dataset...</h4>
+              <p className="text-xs text-slate-500 mt-1">Deduplicating schema, inferring data types, and calculating health scores...</p>
             </div>
           ) : (
             <>
-              <div className="w-16 h-16 rounded-2xl bg-brand-500/10 text-brand-400 border border-brand-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+              <div className="w-16 h-16 rounded-2xl bg-orange-100 text-coral-600 border border-orange-200 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                 <UploadCloud className="w-8 h-8" />
               </div>
 
-              <h3 className="text-lg font-semibold text-slate-100">
+              <h3 className="text-lg font-semibold text-slate-900">
                 Drag and drop your dataset here
               </h3>
-              <p className="text-sm text-slate-400 mt-1 mb-5">
+              <p className="text-sm text-slate-500 mt-1 mb-5">
                 or click to browse from your computer (up to 50MB)
               </p>
 
               {/* Supported format badges */}
               <div className="flex flex-wrap items-center justify-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300">
-                  <FileText className="w-3.5 h-3.5 text-blue-400" /> CSV
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-700 shadow-2xs">
+                  <FileText className="w-3.5 h-3.5 text-blue-500" /> CSV
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300">
-                  <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" /> Excel (.xlsx)
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-700 shadow-2xs">
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" /> Excel (.xlsx)
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300">
-                  <FileCode className="w-3.5 h-3.5 text-amber-400" /> JSON
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-700 shadow-2xs">
+                  <FileCode className="w-3.5 h-3.5 text-amber-500" /> JSON
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300">
-                  <FileText className="w-3.5 h-3.5 text-purple-400" /> TSV
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-700 shadow-2xs">
+                  <FileText className="w-3.5 h-3.5 text-purple-500" /> TSV
                 </span>
               </div>
             </>

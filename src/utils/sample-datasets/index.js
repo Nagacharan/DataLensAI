@@ -13,19 +13,19 @@ export const SAMPLE_DATASETS = [
     getNormalized: () => normalizeDataset(salesDataset.data, salesDataset.name),
   },
   {
-    id: 'student',
-    title: 'Student Academic Performance',
-    badge: 'Education & Testing',
-    description: studentDataset.description,
-    rowsCount: studentDataset.data.length,
-    getNormalized: () => normalizeDataset(studentDataset.data, studentDataset.name),
-  },
-  {
     id: 'expenses',
     title: 'Corporate Expenses Q1 2024',
     badge: 'Finance & Operations',
     description: expensesDataset.description,
     rowsCount: expensesDataset.data.length,
     getNormalized: () => normalizeDataset(expensesDataset.data, expensesDataset.name),
+  },
+  {
+    id: 'student',
+    title: 'Student Academic Performance',
+    badge: 'Education & Testing',
+    description: studentDataset.description,
+    rowsCount: studentDataset.data.length,
+    getNormalized: () => normalizeDataset(studentDataset.data, studentDataset.name),
   },
 ];

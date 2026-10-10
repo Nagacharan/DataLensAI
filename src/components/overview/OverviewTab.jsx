@@ -55,12 +55,12 @@ export function OverviewTab() {
   return (
     <div className="space-y-6">
       {/* 1. Intelligent Analyst Executive Briefing */}
-      <div className="glass-card rounded-2xl p-6 border border-brand-500/30 bg-gradient-to-r from-brand-950/40 via-slate-900/70 to-purple-950/30 shadow-xl">
+      <div className="rounded-2xl p-6 border border-orange-200/80 bg-gradient-to-r from-orange-50/70 via-white to-amber-50/40 shadow-sm">
         <div className="flex flex-col md:flex-row items-start justify-between gap-6">
           <div className="space-y-3 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 text-xs font-semibold">
-                <Brain className="w-3.5 h-3.5 text-brand-400" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-coral-600 border border-orange-200 text-xs font-semibold">
+                <Brain className="w-3.5 h-3.5 text-coral-500" />
                 Autonomous Analyst Briefing
               </span>
               <Badge variant="accent" size="xs">
@@ -71,32 +71,32 @@ export function OverviewTab() {
               </Badge>
             </div>
 
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
               Executive Understanding of "{activeDataset.fileName}"
             </h1>
 
-            <p className="text-sm text-slate-300 leading-relaxed max-w-4xl">
+            <p className="text-sm text-slate-600 leading-relaxed max-w-4xl">
               {aiNarrative || semanticUnderstanding.executiveSummary}
             </p>
 
             {/* Inferred Roles & Observed Facts Quick Pills */}
             <div className="pt-2 flex flex-wrap gap-2 text-xs">
               {primaryMetric && (
-                <div className="px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800 text-slate-300">
-                  <span className="text-slate-500 mr-1.5">Primary Metric:</span>
-                  <span className="font-semibold text-brand-300 font-mono">{primaryMetric.name}</span>
+                <div className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 shadow-2xs">
+                  <span className="text-slate-400 mr-1.5">Primary Metric:</span>
+                  <span className="font-semibold text-coral-600 font-mono">{primaryMetric.name}</span>
                 </div>
               )}
               {primaryCat && (
-                <div className="px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800 text-slate-300">
-                  <span className="text-slate-500 mr-1.5">Key Segment:</span>
-                  <span className="font-semibold text-emerald-300 font-mono">{primaryCat.name}</span>
+                <div className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 shadow-2xs">
+                  <span className="text-slate-400 mr-1.5">Key Segment:</span>
+                  <span className="font-semibold text-emerald-600 font-mono">{primaryCat.name}</span>
                 </div>
               )}
               {semanticUnderstanding.primaryDate && (
-                <div className="px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800 text-slate-300">
-                  <span className="text-slate-500 mr-1.5">Timeline:</span>
-                  <span className="font-semibold text-amber-300 font-mono">{semanticUnderstanding.primaryDate.name}</span>
+                <div className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 shadow-2xs">
+                  <span className="text-slate-400 mr-1.5">Timeline:</span>
+                  <span className="font-semibold text-amber-600 font-mono">{semanticUnderstanding.primaryDate.name}</span>
                 </div>
               )}
             </div>
@@ -128,23 +128,23 @@ export function OverviewTab() {
 
       {/* 2. Automated Quality Health & 1-Click Action Banner */}
       {qualityRecommendations.length > 0 ? (
-        <div className="glass-card rounded-2xl p-5 border border-amber-500/40 bg-gradient-to-r from-amber-950/20 via-slate-900/60 to-slate-900/60 shadow-lg">
+        <div className="rounded-2xl p-5 border border-amber-200 bg-amber-50/70 shadow-sm">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
             <div className="flex items-start gap-3.5">
-              <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0 mt-0.5">
+              <div className="p-2.5 rounded-xl bg-amber-100 text-amber-700 border border-amber-200 shrink-0 mt-0.5">
                 <ShieldAlert className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-white text-base">Automated Data Quality Assessment</h3>
+                  <h3 className="font-bold text-slate-900 text-base">Automated Data Quality Assessment</h3>
                   <Badge variant="warning" size="xs">
                     {qualityRecommendations.length} Recommended Fixes
                   </Badge>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-slate-500">
                     (Health Score: {profile.dataQualityScore}/100)
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                   We identified {profile.totalMissingCells} missing cells and {profile.duplicateRowsCount} duplicate rows.
                   DataLens has generated tailored, non-destructive cleaning actions to maximize analytical accuracy.
                 </p>
@@ -154,14 +154,14 @@ export function OverviewTab() {
                   {qualityRecommendations.slice(0, 3).map((rec, i) => (
                     <span
                       key={i}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900/90 border border-amber-500/30 text-[11px] text-amber-200"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-amber-200 text-[11px] text-amber-800 font-medium"
                     >
-                      <CheckCircle2 className="w-3 h-3 text-amber-400" />
+                      <CheckCircle2 className="w-3 h-3 text-amber-500" />
                       <span>{rec.title}</span>
                     </span>
                   ))}
                   {qualityRecommendations.length > 3 && (
-                    <span className="text-[11px] text-slate-400 self-center">
+                    <span className="text-[11px] text-slate-500 self-center">
                       +{qualityRecommendations.length - 3} more
                     </span>
                   )}
@@ -176,7 +176,7 @@ export function OverviewTab() {
                 size="md"
                 onClick={applyAllQualityRecommendations}
                 icon={Wand2}
-                className="bg-amber-500 hover:bg-amber-600 focus:ring-amber-500 text-slate-950 font-semibold shadow-glow"
+                className="bg-amber-500 hover:bg-amber-600 focus:ring-amber-500 text-slate-950 font-semibold shadow-sm"
               >
                 Apply All Recommended Fixes (1-Click)
               </Button>
@@ -191,14 +191,14 @@ export function OverviewTab() {
           </div>
         </div>
       ) : (
-        <div className="glass-card rounded-xl p-4 border border-emerald-500/30 bg-emerald-950/15 flex items-center justify-between gap-4">
+        <div className="rounded-xl p-4 border border-emerald-200 bg-emerald-50/70 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+            <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
             <div>
-              <span className="font-semibold text-white text-xs sm:text-sm">
+              <span className="font-semibold text-slate-900 text-xs sm:text-sm">
                 High Integrity Dataset — Pristine Data Quality
               </span>
-              <span className="text-xs text-slate-400 block sm:inline sm:ml-2">
+              <span className="text-xs text-slate-500 block sm:inline sm:ml-2">
                 0 missing cells, 0 duplicates, and verified types. Health Score: 100/100.
               </span>
             </div>
@@ -230,7 +230,7 @@ export function OverviewTab() {
               variant="ghost"
               size="sm"
               onClick={() => setActiveTab('insights')}
-              className="text-brand-400 hover:text-brand-300"
+              className="text-coral-600 hover:text-coral-700 font-medium"
             >
               View All {insights.length} Insights <ArrowRight className="w-3.5 h-3.5 ml-1" />
             </Button>
@@ -240,22 +240,22 @@ export function OverviewTab() {
             {insights.slice(0, 2).map((ins, idx) => (
               <div
                 key={idx}
-                className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between space-y-3"
+                className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex flex-col justify-between space-y-3"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <span className="font-semibold text-sm text-slate-100">{ins.title}</span>
+                    <span className="font-semibold text-sm text-slate-800">{ins.title}</span>
                     <Badge variant="primary" size="xs">{ins.category}</Badge>
                   </div>
-                  <p className="text-xs text-slate-300 leading-relaxed">{ins.summary}</p>
+                  <p className="text-xs text-slate-600 leading-relaxed">{ins.summary}</p>
                 </div>
 
                 {ins.evidence && ins.evidence.length > 0 && (
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200">
                     {ins.evidence.slice(0, 2).map((ev, i) => (
-                      <div key={i} className="text-[11px] p-1.5 rounded bg-slate-950 border border-slate-850">
-                        <span className="text-slate-400 block text-[9px] uppercase">{ev.label}</span>
-                        <span className="font-semibold text-brand-300 font-mono">{ev.value}</span>
+                      <div key={i} className="text-[11px] p-2 rounded-lg bg-white border border-slate-200">
+                        <span className="text-slate-400 block text-[9px] uppercase font-semibold">{ev.label}</span>
+                        <span className="font-semibold text-coral-600 font-mono">{ev.value}</span>
                       </div>
                     ))}
                   </div>
@@ -271,18 +271,17 @@ export function OverviewTab() {
         title="Suggested Inquiries & Instant Co-Pilot Prompts"
         subtitle="Click any question to immediately compute and explain verified answers"
         icon={HelpCircle}
-        className="border-slate-800"
       >
         <div className="flex flex-wrap gap-2">
           {suggested.map((item, idx) => (
             <button
               key={idx}
               onClick={() => handlePromptClick(item.question)}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-brand-500/60 hover:bg-brand-500/10 text-xs text-slate-200 transition text-left group"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 hover:border-orange-300 hover:bg-orange-50/70 text-xs text-slate-700 transition text-left group"
             >
-              <Sparkles className="w-3.5 h-3.5 text-brand-400 shrink-0" />
+              <Sparkles className="w-3.5 h-3.5 text-coral-500 shrink-0" />
               <span>{item.question}</span>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-brand-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+              <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-coral-500 group-hover:translate-x-0.5 transition-transform shrink-0" />
             </button>
           ))}
         </div>

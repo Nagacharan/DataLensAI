@@ -64,9 +64,9 @@ export async function getEnhancedInsights(dataset, profile, deterministicInsight
   };
 }
 
-export async function askDatasetQuestion(question, dataset, profile, conversationHistory = []) {
+export async function askDatasetQuestion(question, dataset, profile, conversationHistory = [], options = {}) {
   // Step 1: Deterministically compute verified answer and evidence
-  const verified = executeDatasetQuery(question, dataset, profile);
+  const verified = executeDatasetQuery(question, dataset, profile, conversationHistory, options);
 
   // Guard: If improper question, immediately return without backend overhead or LLM calls
   if (verified.intent === 'IMPROPER_QUESTION') {

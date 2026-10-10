@@ -39,9 +39,8 @@ export function DatasetProvider({ children }) {
   const [mlPrepLog, setMlPrepLog] = useState([]);
   const [mlTargetColumn, setMlTargetColumn] = useState(null);
 
-  // Navigation & UI state
-  // Default tab is 'overview' (the intelligent executive analyst briefing)
-  const [activeTab, setActiveTab] = useState('overview');
+  // Default tab is 'dashboard' (the visual analytics dashboard matching the mockup)
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -115,7 +114,7 @@ export function DatasetProvider({ children }) {
     ]);
 
     updateActiveData(normalized);
-    setActiveTab('overview');
+    setActiveTab('dashboard');
   };
 
   // Automated 1-Click Quality Cleaning
@@ -293,7 +292,10 @@ export function DatasetProvider({ children }) {
     setIsLoading(true);
 
     try {
-      const response = await askDatasetQuestion(queryText, activeDataset, profile, chatMessages);
+      const response = await askDatasetQuestion(queryText, activeDataset, profile, chatMessages, {
+        insights,
+        semanticUnderstanding,
+      });
 
       const aiMsg = {
         id: `ai-${Date.now()}`,

@@ -59,5 +59,24 @@ export function testQueryEngine() {
 
   console.log('✓ Improper and gibberish queries correctly rejected with "Please give the question properly." and empty evidence.');
 
+  // 6. Conversational dataset inquiry ("tell about the dataset")
+  const tellAboutRes = executeDatasetQuery('tell about the dataset', normalized, profile);
+  assert.strictEqual(tellAboutRes.intent, 'DATASET_OVERVIEW');
+  assert.ok(tellAboutRes.answer.includes('rows'));
+  assert.ok(!tellAboutRes.answer.includes('Please give the question properly'));
+  console.log('✓ Conversational inquiry "tell about the dataset" correctly analyzed and answered.');
+
+  // 7. Insight follow-up inquiry ("Tell me more about: High Integrity: Pristine Dataset")
+  const insightFollowUp = executeDatasetQuery('Tell me more about: High Integrity: Pristine Dataset', normalized, profile);
+  assert.ok(insightFollowUp.intent === 'INSIGHT_EXPLANATION' || insightFollowUp.intent === 'DATA_QUALITY');
+  assert.ok(!insightFollowUp.answer.includes('Please give the question properly'));
+  console.log('✓ Insight follow-up "Tell me more about: High Integrity: Pristine Dataset" correctly analyzed.');
+
+  // 8. General insights query
+  const generalInsights = executeDatasetQuery('What are the key insights?', normalized, profile);
+  assert.strictEqual(generalInsights.intent, 'INSIGHTS_SUMMARY');
+  assert.ok(generalInsights.evidence.length > 0);
+  console.log('✓ General insights query correctly answered with supporting evidence.');
+
   console.log('All Query Engine tests passed!\n');
 }

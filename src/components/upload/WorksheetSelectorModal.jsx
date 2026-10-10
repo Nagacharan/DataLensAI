@@ -22,7 +22,7 @@ export function WorksheetSelectorModal({ isOpen, onClose, sheetData, onSheetSele
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Select Excel Worksheet" maxWidth="max-w-md">
       <div className="space-y-4">
-        <p className="text-sm text-slate-300">
+        <p className="text-sm text-slate-600">
           This Excel workbook contains multiple worksheets. Please choose which sheet you would like to analyze:
         </p>
 
@@ -35,21 +35,21 @@ export function WorksheetSelectorModal({ isOpen, onClose, sheetData, onSheetSele
                 onClick={() => setSelected(sheetName)}
                 className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition ${
                   isChosen
-                    ? 'border-brand-500 bg-brand-500/10 text-white shadow-sm'
-                    : 'border-slate-800 bg-slate-900/60 text-slate-300 hover:border-slate-700'
+                    ? 'border-coral-500 bg-orange-50/80 text-slate-900 shadow-2xs font-semibold'
+                    : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <FileSpreadsheet className={`w-4 h-4 ${isChosen ? 'text-brand-400' : 'text-slate-400'}`} />
-                  <span className="text-sm font-medium">{sheetName}</span>
+                  <FileSpreadsheet className={`w-4 h-4 ${isChosen ? 'text-coral-500' : 'text-slate-400'}`} />
+                  <span className="text-sm">{sheetName}</span>
                 </div>
-                {isChosen && <Check className="w-4 h-4 text-brand-400" />}
+                {isChosen && <Check className="w-4 h-4 text-coral-500" />}
               </button>
             );
           })}
         </div>
 
-        <div className="pt-4 border-t border-slate-800 flex justify-end gap-3">
+        <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>

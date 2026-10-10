@@ -8,6 +8,23 @@ export default {
   theme: {
     extend: {
       colors: {
+        coral: {
+          400: '#FF7A59',
+          500: '#FA5F38',
+          600: '#E24822',
+        },
+        sage: {
+          50: '#F4F7F4',
+          100: '#E6EAE3',
+          200: '#D7DFDC',
+          300: '#CAD5D2',
+          400: '#B2C1BD',
+        },
+        mint: {
+          300: '#A7F3D0',
+          400: '#6EE7B7',
+          500: '#34D399',
+        },
         brand: {
           50: '#f0f7ff',
           100: '#e0effe',

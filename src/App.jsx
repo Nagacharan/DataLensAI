@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDataset, DatasetProvider } from './context/DatasetContext';
 import { Navbar } from './components/layout/Navbar';
-import { NavigationTabs } from './components/layout/NavigationTabs';
+import { SidebarDock } from './components/layout/SidebarDock';
 import { FileUploadZone } from './components/upload/FileUploadZone';
 import { SampleDatasetPicker } from './components/upload/SampleDatasetPicker';
 import { OverviewTab } from './components/overview/OverviewTab';
@@ -12,7 +12,7 @@ import { InsightsTab } from './components/insights/InsightsTab';
 import { AskDataTab } from './components/ask-data/AskDataTab';
 import { ReportTab } from './components/reports/ReportTab';
 import { Modal } from './components/common/Modal';
-import { AlertCircle, Sparkles, Shield, BarChart3, Database, FileSpreadsheet, Wand2 } from 'lucide-react';
+import { AlertCircle, Sparkles, Shield, BarChart3, Wand2 } from 'lucide-react';
 
 function MainApplication() {
   const {
@@ -24,113 +24,122 @@ function MainApplication() {
   } = useDataset();
 
   const [isChangeFileModalOpen, setIsChangeFileModalOpen] = useState(false);
+  const [filterVal, setFilterVal] = useState('ALL');
 
   const handleDatasetLoaded = (dataset) => {
     loadDataset(dataset);
     setIsChangeFileModalOpen(false);
+    setFilterVal('ALL');
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
-      <Navbar onUploadClick={() => setIsChangeFileModalOpen(true)} />
+    <div className="min-h-screen bg-[#E6EAE3] p-2.5 sm:p-5 lg:p-7 flex items-center justify-center font-sans antialiased text-slate-800">
+      {/* Outer Tablet Frame matching Mockup */}
+      <div className="w-full max-w-[1540px] bg-[#CAD5D2] rounded-[36px] p-3.5 sm:p-5 shadow-2xl border border-white/60 flex flex-col gap-3.5 transition-all">
+        {/* Top Header Navbar */}
+        <Navbar
+          onUploadClick={() => setIsChangeFileModalOpen(true)}
+          filterCategoryVal={filterVal}
+          onFilterChange={setFilterVal}
+        />
 
-      {error && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full">
-          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 flex items-start justify-between gap-3 text-xs sm:text-sm">
-            <div className="flex items-start gap-2.5">
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+        {/* Error Alert if any */}
+        {error && (
+          <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-between gap-3 text-xs sm:text-sm font-medium">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
               <span>{error}</span>
             </div>
             <button
               onClick={() => setError(null)}
-              className="text-red-400 hover:text-red-200 font-bold"
+              className="text-rose-500 hover:text-rose-800 font-bold px-2"
             >
               ✕
             </button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Main Content Area */}
-      {!activeDataset ? (
-        /* Landing / Upload Screen */
-        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 w-full space-y-12">
-          {/* Hero Section */}
-          <div className="text-center max-w-3xl mx-auto space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20 text-xs font-semibold mb-2">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>The Autonomous Data Intelligence Co-Pilot</span>
-            </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
-              Upload. Understand.{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-brand-300 to-accent-500">
-                Discover.
-              </span>
-            </h1>
-            <p className="text-base sm:text-lg text-slate-400 leading-relaxed max-w-2xl mx-auto">
-              Transform raw spreadsheets into executive analytics, actionable machine-learning preparations, deterministic visualizations, and audited PDF reports in seconds.
-            </p>
-          </div>
+        {/* Main Canvas Area */}
+        <div className="flex gap-3.5 items-stretch min-h-[660px]">
+          {/* Left Floating Dark Capsule Dock */}
+          {activeDataset && (
+            <SidebarDock onUploadClick={() => setIsChangeFileModalOpen(true)} />
+          )}
 
-          {/* Upload Zone */}
-          <div className="max-w-3xl mx-auto">
-            <FileUploadZone onDatasetLoaded={handleDatasetLoaded} />
-          </div>
+          {/* Crisp Pure White Main Container */}
+          <main className="flex-1 bg-white rounded-[28px] p-4 sm:p-6 shadow-sm border border-slate-100/90 overflow-y-auto max-h-[calc(100vh-125px)] scrollbar-none flex flex-col justify-between">
+            {!activeDataset ? (
+              /* Landing Screen within Clean White Container */
+              <div className="py-6 sm:py-10 max-w-4xl mx-auto w-full space-y-8 animate-fade-in text-center">
+                <div className="space-y-3 max-w-2xl mx-auto">
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-orange-50 text-coral-600 border border-orange-200/80 text-xs font-semibold shadow-sm">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Autonomous Data Intelligence Co-Pilot</span>
+                  </div>
+                  <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight">
+                    Upload. Understand.{' '}
+                    <span className="text-coral-500">Discover.</span>
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                    Transform raw spreadsheets into executive analytics, actionable machine-learning preparations, deterministic visualizations, and audited PDF dossiers in seconds.
+                  </p>
+                </div>
 
-          {/* Sample Datasets */}
-          <div className="max-w-5xl mx-auto">
-            <SampleDatasetPicker onSelectSample={handleDatasetLoaded} />
-          </div>
+                <div className="max-w-2xl mx-auto">
+                  <FileUploadZone onDatasetLoaded={handleDatasetLoaded} />
+                </div>
 
-          {/* Core Feature Value Props */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto pt-6 border-t border-slate-800/80">
-            <div className="glass-card rounded-xl p-5 border border-slate-800/80 space-y-2">
-              <div className="p-2 rounded-lg bg-brand-500/10 text-brand-400 border border-brand-500/20 w-fit">
-                <Shield className="w-5 h-5" />
+                <div className="pt-2">
+                  <SampleDatasetPicker onSelectSample={handleDatasetLoaded} />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-slate-100 text-left">
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1.5">
+                    <div className="w-7 h-7 rounded-xl bg-orange-100 text-coral-600 flex items-center justify-center">
+                      <Shield className="w-4 h-4" />
+                    </div>
+                    <h3 className="font-bold text-slate-900 text-xs">Deterministic Rigor</h3>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Descriptive statistics, correlations, and IQR boundaries computed mathematically without hallucinations.
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1.5">
+                    <div className="w-7 h-7 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
+                      <Wand2 className="w-4 h-4" />
+                    </div>
+                    <h3 className="font-bold text-slate-900 text-xs">Autonomous Pipeline</h3>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Automatic semantic profiling, quality recommendations, and 1-click batch dataset hygiene repairs.
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1.5">
+                    <div className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                      <BarChart3 className="w-4 h-4" />
+                    </div>
+                    <h3 className="font-bold text-slate-900 text-xs">Executive Dossiers</h3>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Multi-page PDF reports containing full visual analytics charts and audit logs page by page.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <h3 className="font-semibold text-slate-100 text-sm">Deterministic Mathematical Engine</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Descriptive stats, correlations, and IQR boundaries are deterministically computed in JavaScript. Zero hallucinated metrics.
-              </p>
-            </div>
-
-            <div className="glass-card rounded-xl p-5 border border-slate-800/80 space-y-2">
-              <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20 w-fit">
-                <Wand2 className="w-5 h-5" />
+            ) : (
+              /* Loaded Dataset View */
+              <div className="flex-1 w-full">
+                {activeTab === 'dashboard' && <DashboardTab activeFilterVal={filterVal} />}
+                {activeTab === 'overview' && <OverviewTab />}
+                {activeTab === 'quality' && <CleaningTab />}
+                {activeTab === 'preparation' && <MLPrepTab />}
+                {activeTab === 'insights' && <InsightsTab />}
+                {activeTab === 'ask' && <AskDataTab />}
+                {activeTab === 'reports' && <ReportTab />}
               </div>
-              <h3 className="font-semibold text-slate-100 text-sm">Quality Cleaning & ML Preparation</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Impute nulls, cap outliers, encode categorical features, normalize scales, and detect data leakage with full rollback.
-              </p>
-            </div>
-
-            <div className="glass-card rounded-xl p-5 border border-slate-800/80 space-y-2">
-              <div className="p-2 rounded-lg bg-accent-500/10 text-accent-400 border border-accent-500/20 w-fit">
-                <BarChart3 className="w-5 h-5" />
-              </div>
-              <h3 className="font-semibold text-slate-100 text-sm">Ask Your Data & PDF Export</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Query your data in plain English with evidence badges, interactive Recharts visualizations, and 1-click executive PDF dossiers.
-              </p>
-            </div>
-          </div>
-        </main>
-      ) : (
-        /* Loaded Dataset Active Workspace */
-        <div className="flex-1 flex flex-col">
-          <NavigationTabs />
-
-          <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-            {activeTab === 'overview' && <OverviewTab />}
-            {activeTab === 'quality' && <CleaningTab />}
-            {activeTab === 'preparation' && <MLPrepTab />}
-            {activeTab === 'dashboard' && <DashboardTab />}
-            {activeTab === 'insights' && <InsightsTab />}
-            {activeTab === 'ask' && <AskDataTab />}
-            {activeTab === 'reports' && <ReportTab />}
+            )}
           </main>
         </div>
-      )}
+      </div>
 
       {/* Change File Modal */}
       <Modal
@@ -139,19 +148,11 @@ function MainApplication() {
         title="Upload or Change Dataset"
         maxWidth="max-w-3xl"
       >
-        <div className="space-y-6">
+        <div className="space-y-5">
           <FileUploadZone onDatasetLoaded={handleDatasetLoaded} />
           <SampleDatasetPicker onSelectSample={handleDatasetLoaded} />
         </div>
       </Modal>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-800/80 py-6 text-center text-xs text-slate-500 glass-panel mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span>DataLens AI — Upload. Understand. Discover.</span>
-          <span>Engineered for Reliability & Deterministic Mathematical Rigor</span>
-        </div>
-      </footer>
     </div>
   );
 }

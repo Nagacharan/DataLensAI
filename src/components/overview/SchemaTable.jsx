@@ -28,15 +28,15 @@ export function SchemaTable() {
             placeholder="Search columns or roles..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8 pr-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700/80 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-brand-500"
+            className="pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-coral-500 focus:bg-white transition"
           />
         </div>
       }
     >
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto -mx-5 -mb-5">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-900/40">
+            <tr className="border-y border-slate-100 text-slate-500 font-semibold uppercase tracking-wider bg-slate-50/80">
               <th className="py-3 px-4">Column Name</th>
               <th className="py-3 px-4">Inferred Role</th>
               <th className="py-3 px-4">Data Type</th>
@@ -45,16 +45,16 @@ export function SchemaTable() {
               <th className="py-3 px-4">Hygiene Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60 text-slate-300">
+          <tbody className="divide-y divide-slate-100 text-slate-700">
             {filteredColumns.map((col) => (
-              <tr key={col.name} className="hover:bg-slate-800/30 transition-colors">
+              <tr key={col.name} className="hover:bg-slate-50/60 transition-colors">
                 {/* Column Name */}
-                <td className="py-3 px-4 font-mono font-medium text-slate-100 whitespace-nowrap">
+                <td className="py-3 px-4 font-mono font-medium text-slate-900 whitespace-nowrap">
                   <div className="flex items-center gap-1.5">
                     {col.name}
                     {col.isIdentifier && (
                       <span title="Detected as record identifier">
-                        <Key className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <Key className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                       </span>
                     )}
                   </div>
@@ -86,29 +86,29 @@ export function SchemaTable() {
                 </td>
 
                 {/* Observed Facts */}
-                <td className="py-3 px-4 text-slate-300 text-[11px] leading-relaxed">
+                <td className="py-3 px-4 text-slate-600 text-[11px] leading-relaxed">
                   {col.observedFacts}
                 </td>
 
                 {/* Inferred Semantic Meaning */}
-                <td className="py-3 px-4 text-slate-400 text-[11px] leading-relaxed">
+                <td className="py-3 px-4 text-slate-500 text-[11px] leading-relaxed">
                   {col.inferredMeaning}
                 </td>
 
                 {/* Hygiene Status */}
                 <td className="py-3 px-4 whitespace-nowrap text-[11px]">
                   {col.nullCount > 0 ? (
-                    <span className="text-amber-400 font-medium flex items-center gap-1">
+                    <span className="text-amber-600 font-medium flex items-center gap-1">
                       <AlertCircle className="w-3 h-3 shrink-0" />
                       {col.nullCount} missing ({col.nullPercentage}%)
                     </span>
                   ) : col.outlierCount > 0 ? (
-                    <span className="text-rose-400 font-medium flex items-center gap-1">
+                    <span className="text-rose-600 font-medium flex items-center gap-1">
                       <AlertCircle className="w-3 h-3 shrink-0" />
                       {col.outlierCount} outliers
                     </span>
                   ) : (
-                    <span className="text-emerald-400 flex items-center gap-1">
+                    <span className="text-emerald-600 flex items-center gap-1 font-medium">
                       <CheckCircle className="w-3 h-3 shrink-0" />
                       Clean
                     </span>

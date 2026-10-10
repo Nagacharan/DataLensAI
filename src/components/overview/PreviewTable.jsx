@@ -88,7 +88,7 @@ export function PreviewTable() {
                 setSearchTerm(e.target.value);
                 setPage(1);
               }}
-              className="pl-8 pr-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700/80 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-brand-500"
+              className="pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-coral-500 focus:bg-white transition"
             />
           </div>
 
@@ -107,27 +107,27 @@ export function PreviewTable() {
       <div className="overflow-x-auto -mx-5 -mb-5">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="bg-slate-900/80 border-y border-slate-800 text-slate-400 font-semibold uppercase tracking-wider">
-              <th className="py-2.5 px-4 w-12 text-slate-500">#</th>
+            <tr className="bg-slate-50/80 border-y border-slate-100 text-slate-500 font-semibold uppercase tracking-wider">
+              <th className="py-2.5 px-4 w-12 text-slate-400">#</th>
               {activeDataset.columns.map(col => (
                 <th
                   key={col.name}
                   onClick={() => handleSort(col.name)}
-                  className="py-2.5 px-4 cursor-pointer hover:text-slate-200 transition-colors whitespace-nowrap"
+                  className="py-2.5 px-4 cursor-pointer hover:text-slate-800 transition-colors whitespace-nowrap"
                 >
                   <div className="flex items-center gap-1.5">
                     <span>{col.name}</span>
-                    <ArrowUpDown className={`w-3 h-3 ${sortColumn === col.name ? 'text-brand-400' : 'text-slate-600'}`} />
+                    <ArrowUpDown className={`w-3 h-3 ${sortColumn === col.name ? 'text-coral-500' : 'text-slate-400'}`} />
                   </div>
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/40 text-slate-300">
+          <tbody className="divide-y divide-slate-100 text-slate-700">
             {paginatedRows.length > 0 ? (
               paginatedRows.map((row, idx) => (
-                <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="py-2.5 px-4 text-slate-500 font-mono text-[11px]">
+                <tr key={idx} className="hover:bg-slate-50/60 transition-colors">
+                  <td className="py-2.5 px-4 text-slate-400 font-mono text-[11px]">
                     {(page - 1) * pageSize + idx + 1}
                   </td>
                   {activeDataset.columns.map(col => {
@@ -136,11 +136,11 @@ export function PreviewTable() {
                     return (
                       <td key={col.name} className="py-2.5 px-4 whitespace-nowrap font-mono text-[11px]">
                         {isMissing ? (
-                          <span className="text-slate-600 italic">null</span>
+                          <span className="text-slate-400 italic">null</span>
                         ) : typeof val === 'number' ? (
-                          <span className="text-brand-300">{val.toLocaleString()}</span>
+                          <span className="text-coral-600 font-medium">{val.toLocaleString()}</span>
                         ) : typeof val === 'boolean' ? (
-                          <span className={val ? 'text-emerald-400' : 'text-rose-400'}>{String(val)}</span>
+                          <span className={val ? 'text-emerald-600' : 'text-rose-600'}>{String(val)}</span>
                         ) : (
                           <span>{String(val)}</span>
                         )}
@@ -151,7 +151,7 @@ export function PreviewTable() {
               ))
             ) : (
               <tr>
-                <td colSpan={activeDataset.columns.length + 1} className="py-8 text-center text-slate-500">
+                <td colSpan={activeDataset.columns.length + 1} className="py-8 text-center text-slate-400">
                   No matching records found.
                 </td>
               </tr>
@@ -161,11 +161,11 @@ export function PreviewTable() {
       </div>
 
       {/* Pagination Bar */}
-      <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">
+      <div className="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500">
         <div>
-          Showing <span className="font-medium text-slate-200">{processedRows.length > 0 ? (page - 1) * pageSize + 1 : 0}</span> to{' '}
-          <span className="font-medium text-slate-200">{Math.min(page * pageSize, processedRows.length)}</span> of{' '}
-          <span className="font-medium text-slate-200">{processedRows.length.toLocaleString()}</span> rows
+          Showing <span className="font-medium text-slate-800">{processedRows.length > 0 ? (page - 1) * pageSize + 1 : 0}</span> to{' '}
+          <span className="font-medium text-slate-800">{Math.min(page * pageSize, processedRows.length)}</span> of{' '}
+          <span className="font-medium text-slate-800">{processedRows.length.toLocaleString()}</span> rows
         </div>
 
         <div className="flex items-center gap-3">
@@ -177,7 +177,7 @@ export function PreviewTable() {
                 setPageSize(Number(e.target.value));
                 setPage(1);
               }}
-              className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 focus:outline-none focus:border-brand-500"
+              className="bg-white border border-slate-200 rounded px-2 py-1 text-slate-700 focus:outline-none focus:border-coral-500"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -196,7 +196,7 @@ export function PreviewTable() {
             >
               Prev
             </Button>
-            <span className="px-2 font-medium text-slate-300">
+            <span className="px-2 font-medium text-slate-700">
               {page} / {totalPages}
             </span>
             <Button
