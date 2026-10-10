@@ -20,6 +20,8 @@ export function Navbar({ onUploadClick }) {
     insights,
     cleaningHistory,
     mlPrepLog,
+    semanticUnderstanding,
+    automatedAnalysis,
     serverConfig,
     insightsProvider,
     resetToRaw,
@@ -29,7 +31,15 @@ export function Navbar({ onUploadClick }) {
 
   const handleDownloadPDF = () => {
     if (!activeDataset || !profile) return;
-    generatePDFReport(activeDataset, profile, insights, cleaningHistory, mlPrepLog);
+    generatePDFReport(
+      activeDataset,
+      profile,
+      insights,
+      cleaningHistory,
+      mlPrepLog,
+      semanticUnderstanding,
+      automatedAnalysis
+    );
   };
 
   return (

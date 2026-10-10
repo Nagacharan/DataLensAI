@@ -5,6 +5,7 @@ import { testMLPrep } from './test-ml-prep.js';
 import { testQueryEngine } from './test-query-engine.js';
 import { testDiskFiles } from './test-disk-files.js';
 import { testAutomatedAnalyst } from './test-automated-analyst.js';
+import { testPDFGenerator } from './test-pdf-generator.js';
 
 async function runAll() {
   console.log('====================================================');
@@ -19,6 +20,7 @@ async function runAll() {
     testMLPrep();
     testQueryEngine();
     testAutomatedAnalyst();
+    testPDFGenerator();
 
     console.log('====================================================');
     console.log('🎉 ALL TEST SUITES PASSED CLEANLY (100% SUCCESS)');

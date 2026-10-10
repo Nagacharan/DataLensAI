@@ -13,12 +13,22 @@ export function ReportTab() {
     insights,
     cleaningHistory,
     mlPrepLog,
+    semanticUnderstanding,
+    automatedAnalysis,
   } = useDataset();
 
   if (!activeDataset || !profile) return null;
 
   const handleDownload = () => {
-    generatePDFReport(activeDataset, profile, insights, cleaningHistory, mlPrepLog);
+    generatePDFReport(
+      activeDataset,
+      profile,
+      insights,
+      cleaningHistory,
+      mlPrepLog,
+      semanticUnderstanding,
+      automatedAnalysis
+    );
   };
 
   return (
@@ -33,7 +43,7 @@ export function ReportTab() {
             <div>
               <h2 className="text-lg font-bold text-white">Executive PDF Report Generator</h2>
               <p className="text-xs text-slate-400">
-                Compile a professional, multi-page audit and analytics dossier with verified figures, descriptive statistics, and AI insights.
+                Compile a professional, multi-page audit and analytics dossier with high-resolution visual charts included page-by-page.
               </p>
             </div>
           </div>
@@ -52,17 +62,47 @@ export function ReportTab() {
       {/* Report Manifest Preview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card
-          title="Included Report Sections"
-          subtitle="The generated PDF will contain the following structured sections"
+          title="Included Report Sections & Visual Pages"
+          subtitle="The generated PDF will contain the following structured pages with embedded visual charts"
           icon={Layers}
         >
           <div className="space-y-3">
             <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-900/60 border border-slate-800 text-xs">
               <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
               <div>
-                <span className="font-semibold text-slate-200">1. Executive Cover & Dataset Profile:</span>
+                <span className="font-semibold text-slate-200">Page 1: Executive Cover & Dataset Profile:</span>
                 <p className="text-slate-400 text-[11px] mt-0.5">
-                  Dataset name, timestamp, total record volume ({profile.rowCount.toLocaleString()} rows), feature count ({profile.columnCount} columns), and overall DataLens hygiene index ({profile.dataQualityScore}/100).
+                  Dataset metadata, total records ({profile.rowCount.toLocaleString()} rows), feature count ({profile.columnCount} columns), DataLens hygiene score ({profile.dataQualityScore}/100), and complete descriptive statistics.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-900/60 border border-slate-800 text-xs">
+              <CheckCircle className="w-4 h-4 text-brand-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold text-slate-200">Page 2: Visual Analytics (Categorical Performance & Share):</span>
+                <p className="text-slate-400 text-[11px] mt-0.5">
+                  High-res Vector Horizontal Bar Chart of top categories, Proportional Segment Share ribbon, and certified breakdown rankings table.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-900/60 border border-slate-800 text-xs">
+              <CheckCircle className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold text-slate-200">Page 3: Visual Analytics (Temporal Progression & Distribution):</span>
+                <p className="text-slate-400 text-[11px] mt-0.5">
+                  Vector Historical Trend Line Chart with trajectory metrics, 8-bin Frequency Distribution Histogram with Mean/Median skew indicators.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-900/60 border border-slate-800 text-xs">
+              <CheckCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold text-slate-200">Page 4: Visual Analytics (Correlations & Bivariate Dispersion):</span>
+                <p className="text-slate-400 text-[11px] mt-0.5">
+                  2D Scatter Dispersion Plot with Linear Regression trendline, Pearson r association coefficient, and pairwise correlation matrix.
                 </p>
               </div>
             </div>
@@ -70,29 +110,9 @@ export function ReportTab() {
             <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-900/60 border border-slate-800 text-xs">
               <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
               <div>
-                <span className="font-semibold text-slate-200">2. Numerical Descriptive Statistics:</span>
+                <span className="font-semibold text-slate-200">Page 5: Strategic Synthesis & Transformation Audit Dossier:</span>
                 <p className="text-slate-400 text-[11px] mt-0.5">
-                  Parametric and non-parametric table: Mean, Median, Sample Standard Deviation, Range, and 1.5x IQR Outlier metrics for every continuous feature.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-900/60 border border-slate-800 text-xs">
-              <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <div>
-                <span className="font-semibold text-slate-200">3. Mathematical & AI Insights:</span>
-                <p className="text-slate-400 text-[11px] mt-0.5">
-                  {insights.length} verified analytical findings covering category concentration, correlations, trajectories, and strategic recommendations.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-900/60 border border-slate-800 text-xs">
-              <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <div>
-                <span className="font-semibold text-slate-200">4. Transformation Audit Trail:</span>
-                <p className="text-slate-400 text-[11px] mt-0.5">
-                  Complete timestamped log of all cleaning imputations, duplicate removals, outlier bounds adjustments, and feature engineering steps.
+                  {insights.length} verified mathematical discoveries and strategic recommendations, followed by immutable timestamped audit trail of transformations.
                 </p>
               </div>
             </div>
