@@ -35,5 +35,29 @@ export function testQueryEngine() {
   assert.ok(missingRes.answer.includes('missing cells'));
   console.log('✓ Data quality question details exact missing cell counts.');
 
+  // 5. Improper / Gibberish questions rejection
+  const gibberish1 = executeDatasetQuery('uyff', normalized, profile);
+  assert.strictEqual(gibberish1.intent, 'IMPROPER_QUESTION');
+  assert.strictEqual(gibberish1.answer, 'Please give the question properly.');
+  assert.strictEqual(gibberish1.evidence.length, 0);
+
+  const gibberish2 = executeDatasetQuery('asdf', normalized, profile);
+  assert.strictEqual(gibberish2.intent, 'IMPROPER_QUESTION');
+  assert.strictEqual(gibberish2.answer, 'Please give the question properly.');
+
+  const improperEmpty = executeDatasetQuery('   ', normalized, profile);
+  assert.strictEqual(improperEmpty.intent, 'IMPROPER_QUESTION');
+  assert.strictEqual(improperEmpty.answer, 'Please give the question properly.');
+
+  const improperSymbols = executeDatasetQuery('???', normalized, profile);
+  assert.strictEqual(improperSymbols.intent, 'IMPROPER_QUESTION');
+  assert.strictEqual(improperSymbols.answer, 'Please give the question properly.');
+
+  const improperRandom = executeDatasetQuery('hello', normalized, profile);
+  assert.strictEqual(improperRandom.intent, 'IMPROPER_QUESTION');
+  assert.strictEqual(improperRandom.answer, 'Please give the question properly.');
+
+  console.log('✓ Improper and gibberish queries correctly rejected with "Please give the question properly." and empty evidence.');
+
   console.log('All Query Engine tests passed!\n');
 }

@@ -68,6 +68,16 @@ export async function askDatasetQuestion(question, dataset, profile, conversatio
   // Step 1: Deterministically compute verified answer and evidence
   const verified = executeDatasetQuery(question, dataset, profile);
 
+  // Guard: If improper question, immediately return without backend overhead or LLM calls
+  if (verified.intent === 'IMPROPER_QUESTION') {
+    return {
+      answer: 'Please give the question properly.',
+      evidence: [],
+      chartData: null,
+      provider: 'DataLens Assistant',
+    };
+  }
+
   // Step 2: Request AI narrative synthesis from backend
   try {
     const res = await fetch('/api/ai/ask', {

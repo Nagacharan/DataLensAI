@@ -100,6 +100,16 @@ app.post('/api/ai/ask', async (req, res) => {
       return res.status(400).json({ error: 'Question is required.' });
     }
 
+    if (verifiedCalculation?.intent === 'IMPROPER_QUESTION') {
+      return res.json({
+        success: true,
+        provider: 'DataLens Assistant',
+        answer: 'Please give the question properly.',
+        evidence: [],
+        chartData: null,
+      });
+    }
+
     if (!genAI) {
       // Return the deterministic answer directly
       return res.json({
@@ -123,11 +133,13 @@ The deterministic code has already computed the following verified facts from th
 - Evidence items: ${JSON.stringify(verifiedCalculation?.evidence || [])}
 - Dataset: ${datasetMetadata?.fileName} (${datasetMetadata?.totalRows} rows, ${datasetMetadata?.totalColumns} columns)
 
-Respond with a direct, conversational, 2-3 sentence answer explaining these exact numerical findings clearly.
+Respond with a direct, conversational, 2-3 sentence answer explaining these exact numerical findings clearly according to the question asked.
 RULES:
 1. NEVER invent any statistics or numbers that are not in the provided evidence.
-2. If there are caveats (like small sample size or missing values), mention them gently.
-3. Be professional, clear, and helpful.`;
+2. Answer specifically and only according to what the user asked. Do NOT provide generic boilerplate summaries or unsolicited column dumps.
+3. If the user's prompt is gibberish, improper, or not a meaningful question, respond strictly with: "Please give the question properly."
+4. If there are caveats (like small sample size or missing values), mention them gently.
+5. Be professional, clear, and helpful.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
