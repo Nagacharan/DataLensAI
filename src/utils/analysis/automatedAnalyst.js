@@ -15,8 +15,14 @@ export function runAutomatedAnalysis(dataset, profile, semanticUnderstanding) {
 
   const { primaryMetric, primaryCategory, primaryDate, columns } = semanticUnderstanding;
 
-  const numCols = columns.filter(c => c.type === 'number' && !c.isIdentifier);
-  const catCols = columns.filter(c => (c.type === 'string' || c.type === 'boolean') && !c.isIdentifier);
+  const allNumCols = columns.filter(c => c.type === 'number');
+  const allCatCols = columns.filter(c => c.type === 'string' || c.type === 'boolean');
+  const numCols = columns.filter(c => c.type === 'number' && !c.isIdentifier).length > 0
+    ? columns.filter(c => c.type === 'number' && !c.isIdentifier)
+    : allNumCols;
+  const catCols = columns.filter(c => (c.type === 'string' || c.type === 'boolean') && !c.isIdentifier).length > 0
+    ? columns.filter(c => (c.type === 'string' || c.type === 'boolean') && !c.isIdentifier)
+    : allCatCols;
   const dateCols = columns.filter(c => c.type === 'date');
 
   // 1. Primary Metric Descriptive Analysis
@@ -27,15 +33,16 @@ export function runAutomatedAnalysis(dataset, profile, semanticUnderstanding) {
 
   // 2. Automated Category Volume Aggregation (Bar Chart)
   let categoryBarChart = null;
-  if (primaryCategory && metricName) {
-    const grouped = aggregateByGroup(rows, primaryCategory.name, metricName, 'sum', 8);
+  const categoryCol = primaryCategory || catCols[0];
+  if (categoryCol && metricName) {
+    const grouped = aggregateByGroup(rows, categoryCol.name, metricName, 'sum', 8);
     if (grouped.length > 0) {
       const totalVolume = grouped.reduce((sum, g) => sum + g.value, 0);
       const topGroup = grouped[0];
       const topPct = totalVolume > 0 ? ((topGroup.value / totalVolume) * 100).toFixed(1) : 0;
 
       categoryBarChart = {
-        title: `Total ${metricName} by ${primaryCategory.name}`,
+        title: `Total ${metricName} by ${categoryCol.name}`,
         subtitle: `Top performer "${topGroup.group}" accounts for ${topPct}% of aggregate volume`,
         data: grouped,
         xKey: 'group',
@@ -48,7 +55,7 @@ export function runAutomatedAnalysis(dataset, profile, semanticUnderstanding) {
 
   // 3. Automated Category Proportions (Donut Chart)
   let categoryDonutChart = null;
-  const donutCat = catCols.find(c => c.uniqueCount >= 2 && c.uniqueCount <= 7) || primaryCategory;
+  const donutCat = catCols.find(c => c.uniqueCount >= 2 && c.uniqueCount <= 7) || categoryCol;
   if (donutCat) {
     const donutData = aggregateByGroup(
       rows,
@@ -91,12 +98,12 @@ export function runAutomatedAnalysis(dataset, profile, semanticUnderstanding) {
 
   // 5. Automated Frequency Distribution (Histogram)
   let distributionHistogram = null;
-  if (metricName && primaryStats && primaryStats.count >= 5) {
+  if (metricName && primaryStats && primaryStats.count >= 2) {
     const metricVals = rows.map(r => r[metricName]).filter(v => typeof v === 'number');
     const bins = computeHistogramBins(metricVals, 8);
     distributionHistogram = {
-      title: `${metricName} Distribution Histogram`,
-      subtitle: `8 equal-width frequency bins (Median: ${primaryStats.median.toLocaleString()})`,
+      title: `${metricName} Frequency Distribution`,
+      subtitle: `Equal-width binned observation counts (Median: ${primaryStats.median.toLocaleString()})`,
       values: metricVals,
       bins,
       stats: primaryStats,
@@ -109,31 +116,35 @@ export function runAutomatedAnalysis(dataset, profile, semanticUnderstanding) {
   if (numCols.length >= 2) {
     const nonIdNames = numCols.map(c => c.name);
     const corrMatrix = buildCorrelationMatrix(rows, nonIdNames);
-    const strongest = corrMatrix[0];
+    const strongest = corrMatrix[0] || {
+      columnA: numCols[0].name,
+      columnB: numCols[1].name,
+      correlation: 0,
+      strength: 'neutral',
+      direction: 'independent',
+    };
 
-    if (strongest) {
-      correlationAnalysis = {
-        matrix: corrMatrix.slice(0, 5),
-        strongest,
-      };
+    correlationAnalysis = {
+      matrix: corrMatrix.slice(0, 5),
+      strongest,
+    };
 
-      // Scatter plot of strongest pair
-      const colX = strongest.columnA;
-      const colY = strongest.columnB;
-      const scatterPoints = rows
-        .filter(r => typeof r[colX] === 'number' && typeof r[colY] === 'number')
-        .slice(0, 150)
-        .map(r => ({ x: r[colX], y: r[colY] }));
+    // Scatter plot of strongest pair or first pair
+    const colX = strongest.columnA;
+    const colY = strongest.columnB;
+    const scatterPoints = rows
+      .filter(r => typeof r[colX] === 'number' && typeof r[colY] === 'number')
+      .slice(0, 150)
+      .map(r => ({ x: r[colX], y: r[colY] }));
 
-      scatterPlot = {
-        title: `Bivariate Association: ${colX} vs ${colY}`,
-        subtitle: `Pearson r = ${strongest.correlation} (${strongest.strength} ${strongest.direction})`,
-        data: scatterPoints,
-        xLabel: colX,
-        yLabel: colY,
-        r: strongest.correlation,
-      };
-    }
+    scatterPlot = {
+      title: `Relationship: ${colX} vs ${colY}`,
+      subtitle: `Bivariate correlation scatter plot (Pearson r = ${strongest.correlation})`,
+      data: scatterPoints,
+      xLabel: colX,
+      yLabel: colY,
+      r: strongest.correlation,
+    };
   }
 
   return {

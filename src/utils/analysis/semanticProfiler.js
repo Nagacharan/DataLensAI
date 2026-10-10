@@ -12,7 +12,7 @@ export function inferSemanticRole(colDef, uniqueCount, totalRows, sampleValues =
   const hasIdKeyword = idKeywords.some(kw => nameLower === kw || nameLower.endsWith(`_${kw}`) || nameLower.startsWith(`${kw}_`));
   const uniqueRatio = totalRows > 0 ? uniqueCount / totalRows : 0;
 
-  if ((hasIdKeyword && uniqueRatio > 0.75) || (uniqueRatio > 0.98 && totalRows > 10)) {
+  if (hasIdKeyword && (uniqueRatio > 0.6 || totalRows > 10)) {
     return {
       role: 'identifier',
       label: 'Unique Identifier',
@@ -110,10 +110,10 @@ export function buildDatasetUnderstanding(dataset, profile) {
   // Identify primary anchor columns
   const financialMetrics = columnUnderstandings.filter(c => c.semanticRole === 'monetary_metric');
   const quantityMetrics = columnUnderstandings.filter(c => c.semanticRole === 'quantity_metric' || c.semanticRole === 'ratio_metric');
-  const primaryMetric = financialMetrics[0] || quantityMetrics[0] || columnUnderstandings.find(c => c.type === 'number' && !c.isIdentifier);
+  const primaryMetric = financialMetrics[0] || quantityMetrics[0] || columnUnderstandings.find(c => c.type === 'number' && !c.isIdentifier) || columnUnderstandings.find(c => c.type === 'number');
 
   const categoricalSegments = columnUnderstandings.filter(c => c.semanticRole === 'categorical_dimension' || c.semanticRole === 'geographic_dimension');
-  const primaryCategory = categoricalSegments.find(c => c.uniqueCount >= 2 && c.uniqueCount <= 12) || categoricalSegments[0];
+  const primaryCategory = categoricalSegments.find(c => c.uniqueCount >= 2 && c.uniqueCount <= 12) || categoricalSegments[0] || columnUnderstandings.find(c => (c.type === 'string' || c.type === 'boolean') && !c.isIdentifier) || columnUnderstandings.find(c => c.type === 'string' || c.type === 'boolean');
 
   const temporalColumns = columnUnderstandings.filter(c => c.semanticRole === 'temporal');
   const primaryDate = temporalColumns[0];

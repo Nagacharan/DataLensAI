@@ -8,6 +8,8 @@ import { jsPDF } from 'jspdf';
 import autoTable, { applyPlugin } from 'jspdf-autotable';
 import { runAutomatedAnalysis } from '../analysis/automatedAnalyst.js';
 import { buildDatasetUnderstanding } from '../analysis/semanticProfiler.js';
+import { aggregateByGroup } from '../analysis/aggregations.js';
+import { computeHistogramBins } from '../analysis/distributions.js';
 
 // Ensure jsPDF AutoTable plugin is initialized
 try {
@@ -22,9 +24,10 @@ const PALETTE = {
   primaryDark: [3, 105, 161], // Sky-700
   secondary: [99, 102, 241],  // Indigo-500 #6366F1
   accent: [245, 158, 11],     // Amber-500
-  success: [16, 185, 129],    // Emerald-500
+  success: [16, 185, 129],    // Emerald-500 #10B981
   danger: [239, 68, 68],      // Rose-500
-  purple: [139, 92, 246],     // Violet-500
+  purple: [168, 85, 247],     // Purple-500 #A855F7
+  violet: [139, 92, 246],     // Violet-500
   cyan: [6, 182, 212],        // Cyan-500
   slate950: [2, 6, 23],
   slate900: [15, 23, 42],     // #0F172A
@@ -42,9 +45,9 @@ const PALETTE = {
 
 const CHART_COLORS = [
   [14, 140, 233],  // Blue
+  [168, 85, 247], // Purple
   [16, 185, 129],  // Emerald
   [245, 158, 11],  // Amber
-  [139, 92, 246],  // Violet
   [239, 68, 68],   // Rose
   [6, 182, 212],   // Cyan
   [234, 88, 12],   // Orange
@@ -106,7 +109,7 @@ function drawPageHeader(doc, title, subtitle, pageTag) {
 
   // Page Tag Pill
   if (pageTag) {
-    const pillW = 140;
+    const pillW = 145;
     const pillX = pageWidth - margin - pillW;
     doc.setFillColor(...PALETTE.slate800);
     doc.roundedRect(pillX, 18, pillW, 24, 4, 4, 'F');
@@ -118,9 +121,9 @@ function drawPageHeader(doc, title, subtitle, pageTag) {
 }
 
 /**
- * Visual Component 1: Vector Horizontal Bar Chart
+ * Visual Component: Vertical Vector Bar Chart (matching UI dashboard)
  */
-function drawVectorBarChart(doc, { title, subtitle, data, xKey, yKey, x, y, width, height }) {
+function drawVerticalBarChart(doc, { title, subtitle, data, xKey, yKey, x, y, width, height }) {
   // Container card
   doc.setFillColor(...PALETTE.slate50);
   doc.setDrawColor(...PALETTE.slate200);
@@ -128,6 +131,323 @@ function drawVectorBarChart(doc, { title, subtitle, data, xKey, yKey, x, y, widt
   doc.roundedRect(x, y, width, height, 6, 6, 'FD');
 
   // Header
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...PALETTE.slate900);
+  doc.text(truncate(title, 34), x + 12, y + 16);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(...PALETTE.slate600);
+  doc.text(truncate(subtitle, 42), x + 12, y + 26);
+
+  const items = (data || []).slice(0, 6);
+  if (items.length === 0) return;
+
+  const plotX = x + 38;
+  const plotY = y + 36;
+  const plotW = width - 52;
+  const plotH = height - 58;
+
+  const maxVal = Math.max(...items.map(d => d[yKey] !== undefined ? d[yKey] : (d.value || 0)), 1);
+
+  // Horizontal Grid Lines
+  for (let g = 0; g <= 3; g++) {
+    const gy = plotY + plotH - (g * (plotH / 3));
+    const gVal = (g * maxVal) / 3;
+    doc.setDrawColor(...PALETTE.slate200);
+    doc.setLineWidth(0.5);
+    doc.line(plotX, gy, plotX + plotW, gy);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...PALETTE.slate500);
+    doc.text(formatVal(gVal), plotX - 5, gy + 2, { align: 'right' });
+  }
+
+  // Draw Vertical Bars
+  const slotW = plotW / items.length;
+  const barW = Math.min(32, slotW * 0.65);
+
+  items.forEach((item, idx) => {
+    const val = item[yKey] !== undefined ? item[yKey] : (item.value || 0);
+    const barH = Math.max(3, (val / maxVal) * plotH);
+    const bx = plotX + (idx * slotW) + ((slotW - barW) / 2);
+    const by = plotY + plotH - barH;
+
+    // Bar fill in Brand Blue
+    doc.setFillColor(...PALETTE.primary);
+    doc.roundedRect(bx, by, barW, barH, 2, 2, 'F');
+
+    // Value on top of bar
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...PALETTE.slate700);
+    doc.text(formatVal(val), bx + (barW / 2), by - 3, { align: 'center' });
+
+    // Category label on X-axis
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...PALETTE.slate800);
+    doc.text(truncate(item[xKey] || item.group || item.name, 10), bx + (barW / 2), plotY + plotH + 11, { align: 'center' });
+  });
+}
+
+/**
+ * Visual Component: Vector Donut Ring Chart with Legend (matching UI dashboard)
+ */
+function drawVectorDonutChart(doc, { title, subtitle, data, x, y, width, height }) {
+  // Container card
+  doc.setFillColor(...PALETTE.slate50);
+  doc.setDrawColor(...PALETTE.slate200);
+  doc.setLineWidth(0.75);
+  doc.roundedRect(x, y, width, height, 6, 6, 'FD');
+
+  // Header
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...PALETTE.slate900);
+  doc.text(truncate(title, 34), x + 12, y + 16);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(...PALETTE.slate600);
+  doc.text(truncate(subtitle, 42), x + 12, y + 26);
+
+  const items = (data || []).slice(0, 5);
+  if (items.length === 0) return;
+
+  const total = items.reduce((sum, d) => sum + (d.value || 0), 0) || 1;
+
+  // Donut geometry
+  const cx = x + (width / 2);
+  const cy = y + 78;
+  const outerR = 36;
+  const innerR = 20;
+
+  // Draw wedge segments using triangle fans
+  let startAngle = -Math.PI / 2;
+  items.forEach((item, idx) => {
+    const sweep = ((item.value || 0) / total) * 2 * Math.PI;
+    const color = CHART_COLORS[idx % CHART_COLORS.length];
+    const steps = Math.max(12, Math.round(sweep * 15));
+
+    doc.setFillColor(...color);
+    for (let s = 0; s < steps; s++) {
+      const a1 = startAngle + (s / steps) * sweep;
+      const a2 = startAngle + ((s + 1) / steps) * sweep;
+      const x1 = cx + outerR * Math.cos(a1);
+      const y1 = cy + outerR * Math.sin(a1);
+      const x2 = cx + outerR * Math.cos(a2);
+      const y2 = cy + outerR * Math.sin(a2);
+      doc.triangle(cx, cy, x1, y1, x2, y2, 'F');
+    }
+    startAngle += sweep;
+  });
+
+  // Inner cutout circle
+  doc.setFillColor(...PALETTE.slate50);
+  doc.circle(cx, cy, innerR, 'F');
+
+  // Donut Legend Pills under chart
+  const legendY = y + 128;
+  const itemW = (width - 24) / Math.min(items.length, 3);
+
+  items.slice(0, 3).forEach((item, idx) => {
+    const legX = x + 12 + (idx * itemW);
+    const color = CHART_COLORS[idx % CHART_COLORS.length];
+    const pct = (((item.value || 0) / total) * 100).toFixed(0);
+
+    doc.setFillColor(...color);
+    doc.circle(legX + 5, legendY + 4, 3.5, 'F');
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...PALETTE.slate800);
+    doc.text(`${truncate(item.name || item.group, 8)} (${pct}%)`, legX + 12, legendY + 6);
+  });
+}
+
+/**
+ * Visual Component: Emerald Green Frequency Histogram (matching UI dashboard)
+ */
+function drawVectorHistogram(doc, { title, subtitle, bins, stats, x, y, width, height }) {
+  // Container card
+  doc.setFillColor(...PALETTE.slate50);
+  doc.setDrawColor(...PALETTE.slate200);
+  doc.setLineWidth(0.75);
+  doc.roundedRect(x, y, width, height, 6, 6, 'FD');
+
+  // Header
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...PALETTE.slate900);
+  doc.text(truncate(title, 34), x + 12, y + 16);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(...PALETTE.slate600);
+  doc.text(truncate(subtitle, 42), x + 12, y + 26);
+
+  const binList = bins || [];
+  if (binList.length === 0) return;
+
+  const plotX = x + 38;
+  const plotY = y + 36;
+  const plotW = width - 52;
+  const plotH = height - 58;
+
+  const maxCount = Math.max(...binList.map(b => b.count), 1);
+
+  // Horizontal Grid Lines
+  for (let g = 0; g <= 3; g++) {
+    const gy = plotY + plotH - (g * (plotH / 3));
+    const cVal = Math.round((g * maxCount) / 3);
+    doc.setDrawColor(...PALETTE.slate200);
+    doc.setLineWidth(0.5);
+    doc.line(plotX, gy, plotX + plotW, gy);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...PALETTE.slate500);
+    doc.text(formatVal(cVal), plotX - 5, gy + 2, { align: 'right' });
+  }
+
+  const slotW = plotW / binList.length;
+  const barW = Math.max(3, slotW - 3);
+
+  binList.forEach((b, idx) => {
+    const barH = Math.max(2, (b.count / maxCount) * plotH);
+    const bx = plotX + (idx * slotW) + 1.5;
+    const by = plotY + plotH - barH;
+
+    // Green Histogram Bar (matching screenshot #10B981)
+    doc.setFillColor(...PALETTE.success);
+    doc.roundedRect(bx, by, barW, barH, 1.5, 1.5, 'F');
+
+    // Count on top of bar
+    if (b.count > 0 && barW >= 8) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(6);
+      doc.setTextColor(...PALETTE.slate700);
+      doc.text(formatVal(b.count), bx + (barW / 2), by - 2.5, { align: 'center' });
+    }
+
+    // Min boundary label under bar
+    if (idx % 2 === 0 || idx === binList.length - 1) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6);
+      doc.setTextColor(...PALETTE.slate500);
+      doc.text(`${Math.round(b.min)}`, bx + (barW / 2), plotY + plotH + 10, { align: 'center' });
+    }
+  });
+}
+
+/**
+ * Visual Component: Bivariate Scatter Plot with Regression Line (matching UI dashboard)
+ */
+function drawVectorScatterPlot(doc, { title, subtitle, data, xLabel, yLabel, r, x, y, width, height }) {
+  // Container card
+  doc.setFillColor(...PALETTE.slate50);
+  doc.setDrawColor(...PALETTE.slate200);
+  doc.setLineWidth(0.75);
+  doc.roundedRect(x, y, width, height, 6, 6, 'FD');
+
+  // Header
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...PALETTE.slate900);
+  doc.text(truncate(title, 34), x + 12, y + 16);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(...PALETTE.slate600);
+  doc.text(truncate(subtitle, 42), x + 12, y + 26);
+
+  const points = (data || []).slice(0, 90);
+  if (points.length < 2) return;
+
+  const plotX = x + 38;
+  const plotY = y + 36;
+  const plotW = width - 52;
+  const plotH = height - 58;
+
+  const xs = points.map(p => p.x);
+  const ys = points.map(p => p.y);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  const rangeX = (maxX - minX) || 1;
+  const rangeY = (maxY - minY) || 1;
+
+  // Background Box with dotted lines
+  doc.setFillColor(...PALETTE.white);
+  doc.setDrawColor(...PALETTE.slate300);
+  doc.setLineWidth(0.5);
+  doc.rect(plotX, plotY, plotW, plotH, 'FD');
+
+  // Y-axis tick values (50, 75, 100 style)
+  for (let g = 0; g <= 2; g++) {
+    const gy = plotY + plotH - (g * (plotH / 2));
+    const gVal = minY + (g * (rangeY / 2));
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...PALETTE.slate500);
+    doc.text(formatVal(gVal), plotX - 4, gy + 2, { align: 'right' });
+  }
+
+  // Plot Sky-Blue Points (matching screenshot)
+  points.forEach(pt => {
+    const px = plotX + (((pt.x - minX) / rangeX) * plotW);
+    const py = plotY + plotH - (((pt.y - minY) / rangeY) * plotH);
+    doc.setFillColor(...PALETTE.primary);
+    doc.circle(px, py, 2.2, 'F');
+  });
+
+  // Linear Regression Trendline
+  let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+  const n = points.length;
+  points.forEach(p => {
+    sumX += p.x;
+    sumY += p.y;
+    sumXY += p.x * p.y;
+    sumXX += p.x * p.x;
+  });
+  const slope = (n * sumXY - sumX * sumY) / ((n * sumXX - sumX * sumX) || 1);
+  const intercept = (sumY - slope * sumX) / n;
+
+  const regY1 = slope * minX + intercept;
+  const regY2 = slope * maxX + intercept;
+
+  const lineY1 = plotY + plotH - (((regY1 - minY) / rangeY) * plotH);
+  const lineY2 = plotY + plotH - (((regY2 - minY) / rangeY) * plotH);
+
+  doc.setDrawColor(...PALETTE.danger);
+  doc.setLineWidth(1.2);
+  doc.line(
+    plotX,
+    Math.max(plotY, Math.min(plotY + plotH, lineY1)),
+    plotX + plotW,
+    Math.max(plotY, Math.min(plotY + plotH, lineY2))
+  );
+
+  // X Axis Label
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(...PALETTE.slate600);
+  doc.text(`X: ${truncate(xLabel, 15)}`, plotX + (plotW / 2), plotY + plotH + 11, { align: 'center' });
+}
+
+/**
+ * Visual Component: Full-Page Horizontal Bar Chart
+ */
+function drawVectorBarChart(doc, { title, subtitle, data, xKey, yKey, x, y, width, height }) {
+  doc.setFillColor(...PALETTE.slate50);
+  doc.setDrawColor(...PALETTE.slate200);
+  doc.setLineWidth(0.75);
+  doc.roundedRect(x, y, width, height, 6, 6, 'FD');
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10.5);
   doc.setTextColor(...PALETTE.slate900);
@@ -141,7 +461,7 @@ function drawVectorBarChart(doc, { title, subtitle, data, xKey, yKey, x, y, widt
   const items = (data || []).slice(0, 6);
   if (items.length === 0) return;
 
-  const maxVal = Math.max(...items.map(d => d[yKey] || d.value || 0), 1);
+  const maxVal = Math.max(...items.map(d => d[yKey] !== undefined ? d[yKey] : (d.value || 0)), 1);
   const labelWidth = 105;
   const valWidth = 55;
   const barStartX = x + 14 + labelWidth;
@@ -155,18 +475,14 @@ function drawVectorBarChart(doc, { title, subtitle, data, xKey, yKey, x, y, widt
     const barW = Math.max(4, (val / maxVal) * barMaxW);
     const barH = Math.min(13, rowHeight - 5);
 
-    // Label
     doc.setFont('helvetica', idx === 0 ? 'bold' : 'normal');
     doc.setFontSize(8);
     doc.setTextColor(...PALETTE.slate800);
-    doc.text(truncate(item[xKey] || item.group || '', 20), barStartX - 6, rowY + 9, { align: 'right' });
+    doc.text(truncate(item[xKey] || item.group || item.name || '', 20), barStartX - 6, rowY + 9, { align: 'right' });
 
-    // Bar
-    const color = CHART_COLORS[idx % CHART_COLORS.length];
-    doc.setFillColor(...color);
+    doc.setFillColor(...CHART_COLORS[idx % CHART_COLORS.length]);
     doc.roundedRect(barStartX, rowY, barW, barH, 2.5, 2.5, 'F');
 
-    // Value
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7.5);
     doc.setTextColor(...PALETTE.slate700);
@@ -175,86 +491,14 @@ function drawVectorBarChart(doc, { title, subtitle, data, xKey, yKey, x, y, widt
 }
 
 /**
- * Visual Component 2: Vector Category Proportions Ribbon & Segment Breakdown
- */
-function drawVectorProportionsChart(doc, { title, subtitle, data, x, y, width, height }) {
-  // Container card
-  doc.setFillColor(...PALETTE.slate50);
-  doc.setDrawColor(...PALETTE.slate200);
-  doc.setLineWidth(0.75);
-  doc.roundedRect(x, y, width, height, 6, 6, 'FD');
-
-  // Header
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10.5);
-  doc.setTextColor(...PALETTE.slate900);
-  doc.text(title, x + 14, y + 18);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(...PALETTE.slate600);
-  doc.text(subtitle, x + 14, y + 29);
-
-  const items = (data || []).slice(0, 6);
-  if (items.length === 0) return;
-
-  const total = items.reduce((sum, d) => sum + (d.value || 0), 0) || 1;
-  const ribbonX = x + 14;
-  const ribbonY = y + 36;
-  const ribbonW = width - 28;
-  const ribbonH = 14;
-
-  // Draw proportional ribbon
-  let curX = ribbonX;
-  items.forEach((item, idx) => {
-    const val = item.value || 0;
-    const segW = (val / total) * ribbonW;
-    if (segW > 0) {
-      doc.setFillColor(...CHART_COLORS[idx % CHART_COLORS.length]);
-      doc.rect(curX, ribbonY, segW, ribbonH, 'F');
-      curX += segW;
-    }
-  });
-
-  // Border around ribbon
-  doc.setDrawColor(...PALETTE.slate300);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(ribbonX, ribbonY, ribbonW, ribbonH, 2, 2, 'S');
-
-  // Legend Grid (2 columns)
-  const legendStartY = ribbonY + 22;
-  const colWidth = (width - 28) / 2;
-
-  items.forEach((item, idx) => {
-    const col = idx % 2;
-    const row = Math.floor(idx / 2);
-    const legX = ribbonX + (col * colWidth);
-    const legY = legendStartY + (row * 15);
-    const pct = ((item.value / total) * 100).toFixed(1);
-
-    // Color swatch
-    doc.setFillColor(...CHART_COLORS[idx % CHART_COLORS.length]);
-    doc.rect(legX, legY, 7, 7, 'F');
-
-    // Label & percentage
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    doc.setTextColor(...PALETTE.slate700);
-    doc.text(`${truncate(item.name || item.group, 16)}: ${pct}% (${formatVal(item.value)})`, legX + 11, legY + 6);
-  });
-}
-
-/**
- * Visual Component 3: Vector Time Series Progression Line Chart
+ * Visual Component: Time Series Progression Line Chart
  */
 function drawVectorLineChart(doc, { title, subtitle, data, xKey, yKey, x, y, width, height, growthPct }) {
-  // Container card
   doc.setFillColor(...PALETTE.slate50);
   doc.setDrawColor(...PALETTE.slate200);
   doc.setLineWidth(0.75);
   doc.roundedRect(x, y, width, height, 6, 6, 'FD');
 
-  // Header
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10.5);
   doc.setTextColor(...PALETTE.slate900);
@@ -265,7 +509,6 @@ function drawVectorLineChart(doc, { title, subtitle, data, xKey, yKey, x, y, wid
   doc.setTextColor(...PALETTE.slate600);
   doc.text(subtitle, x + 14, y + 29);
 
-  // Growth Badge
   if (growthPct !== undefined) {
     const isPos = Number(growthPct) >= 0;
     const badgeText = `${isPos ? '▲ +' : '▼ '}${growthPct}%`;
@@ -292,7 +535,6 @@ function drawVectorLineChart(doc, { title, subtitle, data, xKey, yKey, x, y, wid
   const maxVal = Math.max(...vals);
   const range = (maxVal - minVal) || 1;
 
-  // Grid lines (3 horizontal)
   for (let g = 0; g <= 3; g++) {
     const gy = plotY + plotH - (g * (plotH / 3));
     const gVal = minVal + (g * (range / 3));
@@ -302,11 +544,10 @@ function drawVectorLineChart(doc, { title, subtitle, data, xKey, yKey, x, y, wid
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6.5);
-    doc.setTextColor(...PALETTE.slate400);
+    doc.setTextColor(...PALETTE.slate500);
     doc.text(formatVal(gVal), plotX - 5, gy + 2, { align: 'right' });
   }
 
-  // Plot line coordinates
   const stepX = plotW / (items.length - 1);
   const points = items.map((item, idx) => {
     const v = item[yKey] !== undefined ? item[yKey] : item.value;
@@ -315,32 +556,27 @@ function drawVectorLineChart(doc, { title, subtitle, data, xKey, yKey, x, y, wid
     return { px, py, val: v, label: item[xKey] || item.date };
   });
 
-  // Area under curve fill
-  doc.setFillColor(224, 242, 254); // Light blue
+  doc.setFillColor(224, 242, 254);
   for (let i = 0; i < points.length - 1; i++) {
     const p1 = points[i];
     const p2 = points[i + 1];
     const base = plotY + plotH;
-    // Draw polygon strip
     doc.triangle(p1.px, base, p1.px, p1.py, p2.px, p2.py, 'F');
     doc.triangle(p1.px, base, p2.px, p2.py, p2.px, base, 'F');
   }
 
-  // Draw connecting line
   doc.setDrawColor(...PALETTE.primary);
   doc.setLineWidth(1.6);
   for (let i = 0; i < points.length - 1; i++) {
     doc.line(points[i].px, points[i].py, points[i + 1].px, points[i + 1].py);
   }
 
-  // Draw dots & labels
   points.forEach((pt, idx) => {
     doc.setFillColor(...PALETTE.primary);
     doc.setDrawColor(...PALETTE.white);
     doc.setLineWidth(0.8);
     doc.circle(pt.px, pt.py, 2.8, 'FD');
 
-    // Bottom date label (every 1st, middle, and last)
     if (idx === 0 || idx === points.length - 1 || idx === Math.floor(points.length / 2)) {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(6.5);
@@ -348,185 +584,6 @@ function drawVectorLineChart(doc, { title, subtitle, data, xKey, yKey, x, y, wid
       doc.text(truncate(pt.label, 8), pt.px, plotY + plotH + 11, { align: 'center' });
     }
   });
-}
-
-/**
- * Visual Component 4: Vector Frequency Distribution Histogram
- */
-function drawVectorHistogram(doc, { title, subtitle, bins, stats, x, y, width, height }) {
-  // Container card
-  doc.setFillColor(...PALETTE.slate50);
-  doc.setDrawColor(...PALETTE.slate200);
-  doc.setLineWidth(0.75);
-  doc.roundedRect(x, y, width, height, 6, 6, 'FD');
-
-  // Header
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10.5);
-  doc.setTextColor(...PALETTE.slate900);
-  doc.text(title, x + 14, y + 18);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(...PALETTE.slate600);
-  doc.text(subtitle, x + 14, y + 29);
-
-  // Mean & Median Legend Pill
-  if (stats) {
-    const infoW = 145;
-    const infoX = x + width - 14 - infoW;
-    doc.setFillColor(241, 245, 249);
-    doc.roundedRect(infoX, y + 12, infoW, 16, 3, 3, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
-    doc.setTextColor(...PALETTE.slate700);
-    doc.text(`Mean: ${formatVal(stats.mean)}  |  Median: ${formatVal(stats.median)}`, infoX + (infoW / 2), y + 23, { align: 'center' });
-  }
-
-  const binList = bins || [];
-  if (binList.length === 0) return;
-
-  const plotX = x + 35;
-  const plotY = y + 42;
-  const plotW = width - 50;
-  const plotH = height - 68;
-
-  const maxCount = Math.max(...binList.map(b => b.count), 1);
-
-  // Grid lines
-  for (let g = 0; g <= 3; g++) {
-    const gy = plotY + plotH - (g * (plotH / 3));
-    doc.setDrawColor(...PALETTE.slate200);
-    doc.setLineWidth(0.5);
-    doc.line(plotX, gy, plotX + plotW, gy);
-
-    const cVal = Math.round((g * maxCount) / 3);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
-    doc.setTextColor(...PALETTE.slate400);
-    doc.text(String(cVal), plotX - 5, gy + 2, { align: 'right' });
-  }
-
-  const barSlot = plotW / binList.length;
-  const barW = Math.max(3, barSlot - 3);
-
-  binList.forEach((b, idx) => {
-    const barH = (b.count / maxCount) * plotH;
-    const bx = plotX + (idx * barSlot) + 1.5;
-    const by = plotY + plotH - barH;
-
-    // Draw Histogram Bar
-    doc.setFillColor(...PALETTE.secondary);
-    doc.roundedRect(bx, by, barW, barH, 1.5, 1.5, 'F');
-
-    // Count label on top of bar
-    if (b.count > 0) {
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(6.5);
-      doc.setTextColor(...PALETTE.slate700);
-      doc.text(String(b.count), bx + (barW / 2), by - 3, { align: 'center' });
-    }
-
-    // Bin range underneath
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6);
-    doc.setTextColor(...PALETTE.slate500);
-    doc.text(`${Math.round(b.min)}`, bx + (barW / 2), plotY + plotH + 9, { align: 'center' });
-  });
-}
-
-/**
- * Visual Component 5: Vector 2D Scatter Plot & Regression Trendline
- */
-function drawVectorScatterPlot(doc, { title, subtitle, data, xLabel, yLabel, r, x, y, width, height }) {
-  // Container card
-  doc.setFillColor(...PALETTE.slate50);
-  doc.setDrawColor(...PALETTE.slate200);
-  doc.setLineWidth(0.75);
-  doc.roundedRect(x, y, width, height, 6, 6, 'FD');
-
-  // Header
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10.5);
-  doc.setTextColor(...PALETTE.slate900);
-  doc.text(title, x + 14, y + 18);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(...PALETTE.slate600);
-  doc.text(subtitle, x + 14, y + 29);
-
-  // Correlation Badge
-  if (r !== undefined) {
-    const badgeW = 95;
-    const badgeX = x + width - 14 - badgeW;
-    doc.setFillColor(243, 232, 255); // Violet tint
-    doc.roundedRect(badgeX, y + 12, badgeW, 16, 3, 3, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.5);
-    doc.setTextColor(...PALETTE.purple);
-    doc.text(`Pearson r = ${r}`, badgeX + (badgeW / 2), y + 23, { align: 'center' });
-  }
-
-  const points = (data || []).slice(0, 75);
-  if (points.length < 2) return;
-
-  const plotX = x + 40;
-  const plotY = y + 42;
-  const plotW = width - 56;
-  const plotH = height - 68;
-
-  const xs = points.map(p => p.x);
-  const ys = points.map(p => p.y);
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
-  const rangeX = (maxX - minX) || 1;
-  const rangeY = (maxY - minY) || 1;
-
-  // Chart Box
-  doc.setFillColor(...PALETTE.white);
-  doc.setDrawColor(...PALETTE.slate300);
-  doc.setLineWidth(0.5);
-  doc.rect(plotX, plotY, plotW, plotH, 'FD');
-
-  // Plot Points
-  points.forEach(pt => {
-    const px = plotX + (((pt.x - minX) / rangeX) * plotW);
-    const py = plotY + plotH - (((pt.y - minY) / rangeY) * plotH);
-    doc.setFillColor(...PALETTE.primary);
-    doc.circle(px, py, 2.2, 'F');
-  });
-
-  // Linear Regression Trendline (least squares)
-  let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
-  const n = points.length;
-  points.forEach(p => {
-    sumX += p.x;
-    sumY += p.y;
-    sumXY += p.x * p.y;
-    sumXX += p.x * p.x;
-  });
-  const slope = (n * sumXY - sumX * sumY) / ((n * sumXX - sumX * sumX) || 1);
-  const intercept = (sumY - slope * sumX) / n;
-
-  const regYStartVal = slope * minX + intercept;
-  const regYEndVal = slope * maxX + intercept;
-
-  const lineY1 = plotY + plotH - (((regYStartVal - minY) / rangeY) * plotH);
-  const lineY2 = plotY + plotH - (((regYEndVal - minY) / rangeY) * plotH);
-
-  doc.setDrawColor(...PALETTE.danger);
-  doc.setLineWidth(1.4);
-  doc.line(plotX, Math.max(plotY, Math.min(plotY + plotH, lineY1)), plotX + plotW, Math.max(plotY, Math.min(plotY + plotH, lineY2)));
-
-  // Axis Labels
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(6.5);
-  doc.setTextColor(...PALETTE.slate600);
-  doc.text(`X-Axis: ${truncate(xLabel, 24)}`, plotX + (plotW / 2), plotY + plotH + 11, { align: 'center' });
-  doc.text(`Y: ${truncate(yLabel, 15)}`, plotX - 5, plotY + 12, { align: 'right' });
 }
 
 /**
@@ -552,14 +609,25 @@ export function generatePDFReport(
   const margin = 40;
   const contentWidth = pageWidth - (margin * 2);
 
-  // Guarantee understanding and automated analysis structures
+  // Guarantee understanding and automated analysis structures with fallbacks
   const understanding = semanticUnderstanding || buildDatasetUnderstanding(dataset, profile);
   const auto = automatedAnalysis || runAutomatedAnalysis(dataset, profile, understanding) || {};
+
+  // Extract column candidates for fallback visual rendering
+  const numCols = dataset.columns.filter(c => c.type === 'number');
+  const catCols = dataset.columns.filter(c => c.type === 'string' || c.type === 'boolean');
+  const primaryMetric = auto.primaryMetricName || understanding.primaryMetric?.name || numCols[0]?.name;
+  const primaryCat = understanding.primaryCategory?.name || catCols[0]?.name;
+
+  // Prepare fallback data for the 4 dashboard charts if needed
+  const barData = auto.categoryBarChart?.data || (primaryCat && primaryMetric ? aggregateByGroup(dataset.rows, primaryCat, primaryMetric, 'sum', 6) : []);
+  const donutData = auto.categoryDonutChart?.data || (barData.length > 0 ? barData.map(d => ({ name: d.group || d.name, value: d.value })) : []);
+  const histBins = auto.distributionHistogram?.bins || (primaryMetric ? computeHistogramBins(dataset.rows.map(r => r[primaryMetric]).filter(v => typeof v === 'number'), 8) : []);
+  const scatterData = auto.scatterPlot?.data || (numCols.length >= 2 ? dataset.rows.filter(r => typeof r[numCols[0].name] === 'number' && typeof r[numCols[1].name] === 'number').slice(0, 80).map(r => ({ x: r[numCols[0].name], y: r[numCols[1].name] })) : []);
 
   // =========================================================================
   // PAGE 1: EXECUTIVE COVER & DATASET PROFILE
   // =========================================================================
-  // Header Banner
   doc.setFillColor(...PALETTE.primary);
   doc.rect(0, 0, pageWidth, 76, 'F');
 
@@ -662,75 +730,148 @@ export function generatePDFReport(
   );
 
   // =========================================================================
-  // PAGE 2: VISUAL ANALYTICS — CATEGORICAL PERFORMANCE & SHARE
+  // PAGE 2: VISUAL ANALYTICS DASHBOARD (THE 4 CORE CHARTS FROM THE SCREEN!)
   // =========================================================================
   doc.addPage();
   drawPageHeader(
     doc,
-    'Visual Analytics: Categorical Performance & Market Composition',
-    'Autonomous Category Aggregation, Proportional Composition & Segment Distribution',
-    'Visual Analytics — Page 1'
+    'Visual Analytics: Executive Core Visual Dashboard',
+    'Integrated 4-Quadrant Visual Analytics Dossier Corresponding Directly to Live Dashboard',
+    'Visual Dashboard — Page 2'
   );
 
-  cursorY = 82;
+  const gridGap = 16;
+  const cardW = (contentWidth - gridGap) / 2;
+  const cardH = 168;
 
-  // Chart 1: Bar Chart (Volume / Metric by Primary Category)
-  const barChartConfig = auto.categoryBarChart || {
-    title: 'Top Category Distribution',
-    subtitle: 'Aggregate breakdown across primary categorical dimensions',
-    data: profile.columns.find(c => c.type === 'string')?.topValues?.map(v => ({ group: v.value, value: v.count })) || [],
+  // Row 1 - Left: Bar Chart (Total Metric by Category)
+  drawVerticalBarChart(doc, {
+    title: auto.categoryBarChart?.title || `Total ${primaryMetric} by ${primaryCat}`,
+    subtitle: auto.categoryBarChart?.subtitle || 'Top aggregated category volume rankings',
+    data: barData,
     xKey: 'group',
     yKey: 'value',
-  };
-
-  drawVectorBarChart(doc, {
-    title: barChartConfig.title,
-    subtitle: barChartConfig.subtitle,
-    data: barChartConfig.data,
-    xKey: barChartConfig.xKey || 'group',
-    yKey: barChartConfig.yKey || 'value',
     x: margin,
-    y: cursorY,
-    width: contentWidth,
-    height: 185,
+    y: 75,
+    width: cardW,
+    height: cardH,
   });
 
-  cursorY += 198;
-
-  // Chart 2: Category Share / Donut Proportion Ribbon
-  const donutConfig = auto.categoryDonutChart || {
-    title: 'Segment Market Share',
-    subtitle: 'Relative proportion breakdown across core segments',
-    data: (barChartConfig.data || []).slice(0, 6).map(d => ({ name: d.group, value: d.value })),
-  };
-
-  drawVectorProportionsChart(doc, {
-    title: donutConfig.title,
-    subtitle: donutConfig.subtitle,
-    data: donutConfig.data,
-    x: margin,
-    y: cursorY,
-    width: contentWidth,
-    height: 135,
+  // Row 1 - Right: Donut Chart (Proportion Share)
+  drawVectorDonutChart(doc, {
+    title: auto.categoryDonutChart?.title || `${primaryCat} Proportion Share`,
+    subtitle: auto.categoryDonutChart?.subtitle || 'Proportional segment distribution',
+    data: donutData,
+    x: margin + cardW + gridGap,
+    y: 75,
+    width: cardW,
+    height: cardH,
   });
 
-  cursorY += 148;
+  // Row 2 - Left: Frequency Histogram (Emerald Green)
+  drawVectorHistogram(doc, {
+    title: auto.distributionHistogram?.title || `${primaryMetric} Frequency Distribution`,
+    subtitle: auto.distributionHistogram?.subtitle || 'Equal-width binned observation counts',
+    bins: histBins,
+    stats: auto.distributionHistogram?.stats || profile.columns.find(c => c.name === primaryMetric)?.stats,
+    x: margin,
+    y: 75 + cardH + 14,
+    width: cardW,
+    height: cardH,
+  });
 
-  // Supporting Verified Category Breakdown Table
+  // Row 2 - Right: Scatter Plot (Bivariate Relationship)
+  drawVectorScatterPlot(doc, {
+    title: auto.scatterPlot?.title || (numCols.length >= 2 ? `Relationship: ${numCols[0].name} vs ${numCols[1].name}` : 'Bivariate Dispersion'),
+    subtitle: auto.scatterPlot?.subtitle || 'Bivariate correlation scatter plot',
+    data: scatterData,
+    xLabel: auto.scatterPlot?.xLabel || numCols[0]?.name || 'X',
+    yLabel: auto.scatterPlot?.yLabel || numCols[1]?.name || 'Y',
+    r: auto.scatterPlot?.r || 0,
+    x: margin + cardW + gridGap,
+    y: 75 + cardH + 14,
+    width: cardW,
+    height: cardH,
+  });
+
+  // Supporting Executive Visual Analytics Summary Table
+  const tableY = 75 + (cardH * 2) + 26;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(...PALETTE.slate900);
-  doc.text('Supporting Mathematical Aggregations for Categorical Visuals:', margin, cursorY);
+  doc.text('Certified Mathematical Metrics for Core Dashboard Visuals:', margin, tableY);
+
+  const dashSummaryRows = [
+    [
+      'Categorical Leader',
+      barData[0] ? `${barData[0].group || barData[0].name} (${formatVal(barData[0].value)})` : 'N/A',
+      'Proportion Dominance',
+      donutData[0] ? `${(((donutData[0].value || 0) / (donutData.reduce((s, d) => s + (d.value || 0), 0) || 1)) * 100).toFixed(1)}% Share` : 'N/A'
+    ],
+    [
+      'Measurement Metric',
+      primaryMetric || 'N/A',
+      'Distribution Median (μ)',
+      profile.columns.find(c => c.name === primaryMetric)?.stats ? formatVal(profile.columns.find(c => c.name === primaryMetric).stats.median) : 'N/A'
+    ],
+    [
+      'Bivariate Association',
+      numCols.length >= 2 ? `${numCols[0].name} ↔ ${numCols[1].name}` : 'N/A',
+      'Pearson Correlation (r)',
+      auto.scatterPlot?.r !== undefined ? `${auto.scatterPlot.r >= 0 ? '+' : ''}${auto.scatterPlot.r}` : '0.00'
+    ],
+  ];
+
+  renderTable(doc, {
+    startY: tableY + 8,
+    head: [['Visual Dimension', 'Empirical Finding', 'Analytical Indicator', 'Certified Value']],
+    body: dashSummaryRows,
+    theme: 'grid',
+    headStyles: { fillColor: PALETTE.slate900, textColor: PALETTE.white },
+    styles: { fontSize: 7.5, cellPadding: 3.5 },
+    margin: { left: margin, right: margin },
+  });
+
+  // =========================================================================
+  // PAGE 3: VISUAL ANALYTICS DEEP-DIVE — CATEGORICAL PERFORMANCE & SHARE
+  // =========================================================================
+  doc.addPage();
+  drawPageHeader(
+    doc,
+    'Visual Analytics Deep-Dive: Categorical Performance & Market Composition',
+    'High-Resolution Category Aggregation, Proportional Composition & Certified Rankings',
+    'Category Analytics — Page 3'
+  );
+
+  cursorY = 80;
+
+  drawVectorBarChart(doc, {
+    title: auto.categoryBarChart?.title || `Total ${primaryMetric} by ${primaryCat}`,
+    subtitle: auto.categoryBarChart?.subtitle || 'Top aggregated category volume rankings',
+    data: barData,
+    xKey: 'group',
+    yKey: 'value',
+    x: margin,
+    y: cursorY,
+    width: contentWidth,
+    height: 190,
+  });
+
+  cursorY += 205;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(...PALETTE.slate900);
+  doc.text('Certified Category Aggregations & Percentage Breakdown:', margin, cursorY);
   cursorY += 10;
 
-  const barData = barChartConfig.data || [];
   const barTotal = barData.reduce((s, d) => s + (d.value || 0), 0) || 1;
-  const catTableRows = barData.slice(0, 6).map((d, i) => [
+  const catTableRows = barData.slice(0, 8).map((d, i) => [
     `#${i + 1}`,
     d.group || d.name || 'Segment',
     formatVal(d.value),
     `${((d.value / barTotal) * 100).toFixed(1)}%`,
-    i === 0 ? 'Primary Leader' : i === 1 ? 'Secondary Contributor' : 'Standard Segment',
+    i === 0 ? 'Primary Volume Leader' : i === 1 ? 'Secondary Contributor' : 'Standard Segment',
   ]);
 
   if (catTableRows.length > 0) {
@@ -746,19 +887,18 @@ export function generatePDFReport(
   }
 
   // =========================================================================
-  // PAGE 3: VISUAL ANALYTICS — TIME PROGRESSION & DISTRIBUTION FREQUENCY
+  // PAGE 4: VISUAL ANALYTICS DEEP-DIVE — DISTRIBUTION & TEMPORAL DYNAMICS
   // =========================================================================
   doc.addPage();
   drawPageHeader(
     doc,
-    'Visual Analytics: Temporal Trajectory & Numerical Distribution',
-    'Historical Progression Dynamics, Frequency Bins & Statistical Dispersion',
-    'Visual Analytics — Page 2'
+    'Visual Analytics Deep-Dive: Numerical Distribution & Time Dynamics',
+    'Frequency Histogram Bins, Central Tendencies & Historical Progression Dynamics',
+    'Distribution & Dynamics — Page 4'
   );
 
-  cursorY = 82;
+  cursorY = 80;
 
-  // Chart 3: Time Series Progression OR Comparative Group Ranking
   if (auto.timeSeriesChart) {
     drawVectorLineChart(doc, {
       title: auto.timeSeriesChart.title,
@@ -772,111 +912,77 @@ export function generatePDFReport(
       width: contentWidth,
       height: 180,
     });
-  } else {
-    // Alternate comparative visual if no date dimension
-    const secCol = profile.columns.filter(c => c.type === 'string')[1];
-    const secData = secCol?.topValues?.map(v => ({ group: v.value, value: v.count })) || (barChartConfig.data || []);
-    drawVectorBarChart(doc, {
-      title: secCol ? `Cross-Segment Comparison (${secCol.name})` : 'Distribution Across Categories',
-      subtitle: 'Comparative frequency analysis across secondary categorical partitions',
-      data: secData,
-      xKey: 'group',
-      yKey: 'value',
-      x: margin,
-      y: cursorY,
-      width: contentWidth,
-      height: 180,
-    });
+    cursorY += 194;
   }
 
-  cursorY += 194;
+  drawVectorHistogram(doc, {
+    title: auto.distributionHistogram?.title || `${primaryMetric} Frequency Distribution`,
+    subtitle: auto.distributionHistogram?.subtitle || 'Equal-width binned observation counts',
+    bins: histBins,
+    stats: auto.distributionHistogram?.stats || profile.columns.find(c => c.name === primaryMetric)?.stats,
+    x: margin,
+    y: cursorY,
+    width: contentWidth,
+    height: 185,
+  });
 
-  // Chart 4: Numerical Frequency Histogram
-  if (auto.distributionHistogram) {
-    drawVectorHistogram(doc, {
-      title: auto.distributionHistogram.title,
-      subtitle: auto.distributionHistogram.subtitle,
-      bins: auto.distributionHistogram.bins,
-      stats: auto.distributionHistogram.stats,
-      x: margin,
-      y: cursorY,
-      width: contentWidth,
-      height: 175,
-    });
-    cursorY += 188;
+  cursorY += 198;
 
-    // Supporting Histogram Frequencies Table
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.setTextColor(...PALETTE.slate900);
-    doc.text('Numerical Frequency Distribution Breakdown:', margin, cursorY);
-    cursorY += 10;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(...PALETTE.slate900);
+  doc.text('Numerical Frequency Distribution Breakdown:', margin, cursorY);
+  cursorY += 10;
 
-    const histRows = (auto.distributionHistogram.bins || []).map((b, i) => [
-      `Bin ${i + 1}`,
-      `${formatVal(b.min)} – ${formatVal(b.max)}`,
-      b.count.toLocaleString(),
-      `${(((b.count || 0) / dataset.totalRows) * 100).toFixed(1)}%`,
-    ]);
+  const histRows = histBins.map((b, i) => [
+    `Bin ${i + 1}`,
+    `${formatVal(b.min)} – ${formatVal(b.max)}`,
+    b.count.toLocaleString(),
+    `${(((b.count || 0) / dataset.totalRows) * 100).toFixed(1)}%`,
+  ]);
 
+  if (histRows.length > 0) {
     renderTable(doc, {
       startY: cursorY,
-      head: [['Bin Index', 'Numerical Interval Range', 'Observed Frequency', 'Relative Sample Share']],
+      head: [['Bin Index', 'Interval Range', 'Observed Record Count', 'Relative Sample Share']],
       body: histRows,
       theme: 'grid',
-      headStyles: { fillColor: PALETTE.secondary, textColor: PALETTE.white },
-      styles: { fontSize: 7.5, cellPadding: 3 },
+      headStyles: { fillColor: PALETTE.success, textColor: PALETTE.white },
+      styles: { fontSize: 7.5, cellPadding: 3.5 },
       margin: { left: margin, right: margin },
     });
-  } else {
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(9);
-    doc.setTextColor(...PALETTE.slate600);
-    doc.text('Histogram not applicable for non-continuous distributions.', margin, cursorY + 20);
   }
 
   // =========================================================================
-  // PAGE 4: VISUAL ANALYTICS — CORRELATION MATRIX & SCATTER DISPERSION
+  // PAGE 5: VISUAL ANALYTICS DEEP-DIVE — CORRELATIONS & BIVARIATE SCATTER
   // =========================================================================
   doc.addPage();
   drawPageHeader(
     doc,
-    'Visual Analytics: Correlation Matrix & Bivariate Scatter Dispersion',
+    'Visual Analytics Deep-Dive: Correlation Matrix & Bivariate Scatter Dispersion',
     'Pearson Association Coefficients, Linear Regression Trajectory & Outlier Boundaries',
-    'Visual Analytics — Page 3'
+    'Correlations — Page 5'
   );
 
-  cursorY = 82;
+  cursorY = 80;
 
-  // Chart 5: 2D Scatter Plot with Regression Trendline
-  if (auto.scatterPlot) {
-    drawVectorScatterPlot(doc, {
-      title: auto.scatterPlot.title,
-      subtitle: auto.scatterPlot.subtitle,
-      data: auto.scatterPlot.data,
-      xLabel: auto.scatterPlot.xLabel,
-      yLabel: auto.scatterPlot.yLabel,
-      r: auto.scatterPlot.r,
-      x: margin,
-      y: cursorY,
-      width: contentWidth,
-      height: 220,
-    });
-    cursorY += 234;
-  } else {
-    // Fallback card if fewer than 2 numeric columns
-    doc.setFillColor(...PALETTE.slate50);
-    doc.roundedRect(margin, cursorY, contentWidth, 80, 4, 4, 'F');
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(9);
-    doc.setTextColor(...PALETTE.slate600);
-    doc.text('Bivariate scatter plot requires at least 2 continuous numerical features in dataset.', margin + 14, cursorY + 45);
-    cursorY += 95;
-  }
+  drawVectorScatterPlot(doc, {
+    title: auto.scatterPlot?.title || (numCols.length >= 2 ? `Relationship: ${numCols[0].name} vs ${numCols[1].name}` : 'Bivariate Association'),
+    subtitle: auto.scatterPlot?.subtitle || 'Bivariate correlation scatter plot',
+    data: scatterData,
+    xLabel: auto.scatterPlot?.xLabel || numCols[0]?.name || 'Feature A',
+    yLabel: auto.scatterPlot?.yLabel || numCols[1]?.name || 'Feature B',
+    r: auto.scatterPlot?.r || 0,
+    x: margin,
+    y: cursorY,
+    width: contentWidth,
+    height: 220,
+  });
 
-  // Correlation Matrix AutoTable
+  cursorY += 234;
+
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10.5);
+  doc.setFontSize(10);
   doc.setTextColor(...PALETTE.slate900);
   doc.text('Verified Pearson Bivariate Correlation Matrix:', margin, cursorY);
   cursorY += 10;
@@ -887,7 +993,7 @@ export function generatePDFReport(
     c.direction,
     c.strength,
     Math.abs(c.correlation) >= 0.7
-      ? 'Strong linear relationship'
+      ? 'Strong linear association'
       : Math.abs(c.correlation) >= 0.4
       ? 'Moderate linear tendency'
       : 'Weak or independent variance',
@@ -896,7 +1002,7 @@ export function generatePDFReport(
   if (corrRows.length > 0) {
     renderTable(doc, {
       startY: cursorY,
-      head: [['Attribute Pair', 'Pearson (r)', 'Direction', 'Relationship Strength', 'Statistical Inference']],
+      head: [['Attribute Pair', 'Pearson (r)', 'Direction', 'Strength', 'Statistical Assessment']],
       body: corrRows,
       theme: 'striped',
       headStyles: { fillColor: PALETTE.slate900, textColor: PALETTE.white },
@@ -906,7 +1012,7 @@ export function generatePDFReport(
     cursorY = doc.lastAutoTable.finalY + 16;
   }
 
-  // Regulatory Causation Disclaimer Callout
+  // Causation disclaimer box
   const noticeY = Math.min(cursorY, pageHeight - 95);
   doc.setFillColor(254, 242, 242);
   doc.setDrawColor(...PALETTE.danger);
@@ -930,7 +1036,7 @@ export function generatePDFReport(
   );
 
   // =========================================================================
-  // PAGE 5: STRATEGIC INSIGHTS & TRANSFORMATION AUDIT DOSSIER
+  // PAGE 6: STRATEGIC INSIGHTS & TRANSFORMATION AUDIT DOSSIER
   // =========================================================================
   doc.addPage();
   drawPageHeader(
@@ -940,9 +1046,8 @@ export function generatePDFReport(
     'Audit & Insights Dossier'
   );
 
-  cursorY = 82;
+  cursorY = 80;
 
-  // Section 1: Mathematical & AI Insights Table
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(...PALETTE.slate900);
@@ -973,7 +1078,6 @@ export function generatePDFReport(
     cursorY = doc.lastAutoTable.finalY + 20;
   }
 
-  // Section 2: Data Transformation Audit Trail
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(...PALETTE.slate900);

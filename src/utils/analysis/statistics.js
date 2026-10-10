@@ -118,15 +118,17 @@ export function calculateFrequency(values, maxItems = 15) {
  * - high uniqueness ratio (> 95%)
  * - or column name contains 'id', 'code', 'uuid', 'guid', 'key'
  */
-export function isLikelyIdentifier(columnName, uniqueCount, totalRows) {
+export function isLikelyIdentifier(columnName, uniqueCount, totalRows, colType = null) {
   if (totalRows <= 1) return false;
   const lowerName = columnName.toLowerCase();
   const idKeywords = ['id', 'key', 'uuid', 'guid', 'code', 'ref', 'index', 'number', 'no', 'hash'];
   const hasIdKeyword = idKeywords.some(kw => lowerName === kw || lowerName.endsWith(`_${kw}`) || lowerName.startsWith(`${kw}_`));
   const uniqueRatio = uniqueCount / totalRows;
 
-  if (hasIdKeyword && uniqueRatio > 0.8) return true;
-  if (uniqueRatio > 0.98 && totalRows > 10) return true;
+  // Has explicit identifier keyword and high uniqueness
+  if (hasIdKeyword && uniqueRatio > 0.6) return true;
+  if (hasIdKeyword && totalRows > 10) return true;
+
   return false;
 }
 
