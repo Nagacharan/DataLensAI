@@ -14,6 +14,25 @@ However, transforming raw data into reliable insights currently requires either 
 
 ---
 
+## 🧭 The Autonomous Data Analyst Workflow
+
+DataLens AI behaves like an **intelligent autonomous data analyst**. Users do not need to understand statistical theory or manually configure cleaning algorithms to access insights. The default journey is streamlined:
+
+```text
+Upload Dataset
+    -> Understand Dataset (Semantic profiling & Observed Facts vs Inferred Meanings)
+    -> Analyze Automatically (Deterministic metric selection, distributions & correlations)
+    -> Review Data Quality (Automated audit with 1-Click "Apply All Recommended Fixes")
+    -> View Interactive Dashboard (Auto-selected Bar, Line, Donut, Histogram, Scatter charts)
+    -> Read AI Insights (Executive narrative & verified statistical evidence)
+    -> Ask Your Data (Conversational analytics co-pilot with terminology support)
+    -> Download PDF (1-click executive audit dossier)
+```
+
+*(Advanced manual cleaning and prediction-ready ML preparation are available as secondary workflows for users who require granular configuration).*
+
+---
+
 ## 🎯 Target Audience
 - **Business Owners & Operators:** Rapid revenue, expense, and category breakdowns without SQL knowledge.
 - **Data Analysts & Scientists:** Instant exploratory data analysis (EDA), IQR outlier audits, and ML feature pre-processing.
