@@ -1,0 +1,17 @@
+Expense_ID	Date	Department	Category	Amount	Vendor	Approved	Payment_Method
+EXP-501	2024-01-10	Engineering	Cloud Infrastructure	14200	AWS EMEA	true	Corporate Card
+EXP-502	2024-01-12	Marketing	Digital Advertising	8500	Google Ads	true	Wire Transfer
+EXP-503	2024-01-15	Sales	Client Travel	2400	Delta Airlines	true	Corporate Card
+EXP-504	2024-01-20	Operations	Office Supplies	450	Staples Business	true	Direct Debit
+EXP-505	2024-01-28	Engineering	Software Licenses	3900	GitHub Enterprise	true	Corporate Card
+EXP-506	2024-02-05	Human Resources	Recruiting Services	6200	LinkedIn Talent	true	Wire Transfer
+EXP-507	2024-02-12	Engineering	Cloud Infrastructure	15100	AWS EMEA	true	Corporate Card
+EXP-508	2024-02-18	Sales	Conference Sponsorship	18000	TechSummit Global	true	Wire Transfer
+EXP-509	2024-02-22	Marketing	Design Agency	4500	Studio Apex	false	Invoice Pending
+EXP-510	2024-03-02	Engineering	Security Audit	32000	CyberTrust Labs	true	Wire Transfer
+EXP-511	2024-03-10	Operations	Facility Maintenance	1200	CleanCorp Services	true	Direct Debit
+EXP-512	2024-03-15	Marketing	Digital Advertising	9200	Google Ads	true	Wire Transfer
+EXP-513	2024-03-20	Engineering	Cloud Infrastructure	16400	AWS EMEA	true	Corporate Card
+EXP-514	2024-03-25	Sales	Client Travel	3100	United Airlines	true	Corporate Card
+EXP-515	2024-03-29	Human Resources	Employee Training	2800	Coursera Org	true	Corporate Card
+EXP-516	2024-03-31	Operations	Legal Advisory	7500	Lex Partners	true	Wire Transfer

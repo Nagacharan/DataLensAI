@@ -1,0 +1,26 @@
+Order_ID,Date,Region,Product,Category,Units,Unit_Price,Revenue,Discount_Pct,Customer_Segment
+ORD-1001,2024-01-05,North America,Enterprise Cloud Suite,Software,14,1200,16800,5,Enterprise
+ORD-1002,2024-01-08,Europe,AI Inference Server,Hardware,4,6500,26000,10,Enterprise
+ORD-1003,2024-01-12,Asia-Pacific,Cybersecurity Gateway,Hardware,25,850,21250,0,SMB
+ORD-1004,2024-01-18,North America,Data Analytics Tool,Software,40,350,14000,15,Government
+ORD-1005,2024-01-25,Latin America,Cloud Storage Tier-1,Services,60,120,7200,0,SMB
+ORD-1006,2024-02-02,Europe,Enterprise Cloud Suite,Software,22,1200,26400,5,Enterprise
+ORD-1007,2024-02-09,North America,AI Inference Server,Hardware,8,6500,52000,12,Enterprise
+ORD-1008,2024-02-14,Asia-Pacific,Data Analytics Tool,Software,35,350,12250,5,SMB
+ORD-1009,2024-02-21,Europe,Cybersecurity Gateway,Hardware,18,850,15300,0,Government
+ORD-1010,2024-02-28,Middle East,Cloud Storage Tier-1,Services,90,120,10800,8,SMB
+ORD-1011,2024-03-04,North America,AI Supercluster Node,Hardware,2,48000,96000,15,Enterprise
+ORD-1012,2024-03-10,Asia-Pacific,Enterprise Cloud Suite,Software,19,1200,22800,10,Enterprise
+ORD-1013,2024-03-15,Europe,Data Analytics Tool,Software,55,350,19250,10,SMB
+ORD-1014,2024-03-22,Latin America,Cybersecurity Gateway,Hardware,12,850,10200,5,Government
+ORD-1015,2024-03-29,North America,Cloud Storage Tier-1,Services,110,120,13200,12,SMB
+ORD-1016,2024-04-05,Europe,AI Inference Server,Hardware,6,6500,39000,8,Enterprise
+ORD-1017,2024-04-12,Asia-Pacific,Enterprise Cloud Suite,Software,16,1200,19200,5,Enterprise
+ORD-1018,2024-04-19,North America,Cybersecurity Gateway,Hardware,30,850,25500,0,Government
+ORD-1019,2024-04-26,Middle East,Data Analytics Tool,Software,45,350,15750,5,SMB
+ORD-1020,2024-05-03,Europe,Cloud Storage Tier-1,Services,85,120,10200,0,SMB
+ORD-1021,2024-05-10,North America,Enterprise Cloud Suite,Software,28,1200,33600,10,Enterprise
+ORD-1022,2024-05-18,Asia-Pacific,AI Inference Server,Hardware,9,6500,58500,15,Enterprise
+ORD-1023,2024-05-24,Latin America,Data Analytics Tool,Software,20,350,7000,0,Government
+ORD-1024,2024-05-30,Europe,Cybersecurity Gateway,Hardware,,850,,5,SMB
+ORD-1024,2024-05-30,Europe,Cybersecurity Gateway,Hardware,,850,,5,SMB

@@ -1,0 +1,21 @@
+Student_ID,Department,Study_Hours_Weekly,Attendance_Rate,Midterm_Score,Final_Exam_Score,Passed
+STU-001,Computer Science,25,95,88,92,true
+STU-002,Electrical Eng,18,85,74,78,true
+STU-003,Computer Science,10,65,52,50,false
+STU-004,Data Science,30,98,94,96,true
+STU-005,Mechanical Eng,15,80,68,70,true
+STU-006,Data Science,22,90,84,86,true
+STU-007,Electrical Eng,8,60,45,42,false
+STU-008,Computer Science,35,100,96,98,true
+STU-009,Mechanical Eng,20,88,76,80,true
+STU-010,Data Science,12,70,60,58,true
+STU-011,Computer Science,28,94,90,91,true
+STU-012,Electrical Eng,16,82,71,73,true
+STU-013,Mechanical Eng,6,50,40,35,false
+STU-014,Data Science,24,92,86,89,true
+STU-015,Computer Science,19,86,79,82,true
+STU-016,Electrical Eng,,75,65,,true
+STU-017,Mechanical Eng,21,89,78,81,true
+STU-018,Data Science,32,96,92,95,true
+STU-019,Computer Science,14,78,66,64,true
+STU-020,Electrical Eng,26,93,87,88,true
