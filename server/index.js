@@ -1,9 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -164,6 +169,22 @@ RULES:
       warning: `AI provider returned error: ${error.message}`,
     });
   }
+});
+
+// Serve static frontend in production (e.g. Render Web Service deployment)
+const distPath = path.resolve(__dirname, '../dist');
+app.use(express.static(distPath));
+
+// For Single Page App client-side routing, fallback non-API routes to index.html
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  res.sendFile(path.join(distPath, 'index.html'), (err) => {
+    if (err) {
+      next();
+    }
+  });
 });
 
 // Start Server
