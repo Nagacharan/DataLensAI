@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataLens AI — Presentation Deck</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0F1418;
+      --card-bg: #182026;
+      --card-border: #26333D;
+      --text: #F1F5F9;
+      --text-muted: #94A3B8;
+      --primary: #FA5F38;
+      --accent: #2DD4BF;
+      --accent-purple: #A78BFA;
+      --accent-blue: #38BDF8;
+      --sage-light: #E6EAE3;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Ambient background glows */
+    .glow-1 {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(250, 95, 56, 0.12) 0%, transparent 70%);
+      top: -100px;
+      left: -100px;
+      pointer-events: none;
+    }
+    .glow-2 {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(45, 212, 191, 0.1) 0%, transparent 70%);
+      bottom: -150px;
+      right: -150px;
+      pointer-events: none;
+    }
+
+    /* Deck Container */
+    #deck {
+      position: relative;
+      width: 90vw;
+      max-width: 1100px;
+      height: 75vh;
+      max-height: 680px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .slide {
+      display: none;
+      height: 100%;
+      padding: 56px 64px;
+      flex-direction: column;
+      justify-content: space-between;
+      animation: fadeIn 0.35s ease-out forwards;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header */
+    .slide-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    .slide-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.15;
+      color: #FFFFFF;
+      margin-bottom: 24px;
+    }
+
+    .slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    /* Minimal Bullet Points Grid */
+    .grid-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      width: 100%;
+    }
+
+    .grid-cards-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      width: 100%;
+    }
+
+    .point-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .point-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(250, 95, 56, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .card-icon {
+      font-size: 1.8rem;
+    }
+
+    .card-headline {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+
+    .card-desc {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+
+    /* Highlight Banner */
+    .highlight-pill {
+      background: rgba(250, 95, 56, 0.12);
+      border: 1px solid rgba(250, 95, 56, 0.3);
+      color: #FFA585;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Speaker Cue Footer */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 20px;
+      margin-top: 10px;
+    }
+
+    .speaker-cue {
+      font-size: 0.85rem;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slide-number {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Controls Bar */
+    .controls-bar {
+      position: absolute;
+      bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(19, 22, 24, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 8px 16px;
+      border-radius: 9999px;
+      z-index: 50;
+    }
+
+    .btn-nav {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 1.1rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-nav:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--primary);
+    }
+
+    .progress-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .dot.active {
+      background: var(--primary);
+      width: 20px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glow-1"></div>
+  <div class="glow-2"></div>
+
+  <div id="deck">
+
+    <!-- SLIDE 1: Title -->
+    <div class="slide active">
+      <div>
+        <div class="slide-tag">✨ Final Presentation</div>
+        <h1 class="slide-title" style="font-size: 3.5rem; margin-top: 10px;">
+          DataLens AI <span style="color: var(--primary);">🔍</span>
+        </h1>
+        <p style="font-size: 1.4rem; color: #E2E8F0; font-weight: 500;">
+          Autonomous Data Intelligence & Audited Analytics Platform
+        </p>
+      </div>
+
+      <div class="slide-content" style="justify-content: center; gap: 24px;">
+        <div class="highlight-pill" style="align-self: flex-start; font-size: 1.1rem; padding: 12px 24px;">
+          🚀 Upload. Understand. Discover.
+        </div>
+        <p style="color: var(--text-muted); font-size: 1.1rem; max-width: 650px; line-height: 1.6;">
+          An intelligent autonomous data analyst that transforms messy raw files into verified insights, pastel visualizations, and executive PDF audit dossiers in one click.
+        </p>
+      </div>
+
+      <div class="slide-footer">
+        <div class="speaker-cue">🎙️ <b>Presenter Note:</b> Introduce DataLens AI as an autonomous data analyst, not another manual BI dashboard.</div>
+        <div class="slide-number">01 / 10</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Problem -->
+    <div class="slide">
+      <div>
+        <div class="slide-tag">⚠️ The Core Problem</div>
+        <h2 class="slide-title">The Tabular Data Bottleneck</h2>
+      </div>
+
+      <div class="slide-content">
+        <div class="grid-cards">
+          <div class="point-card">
+            <div class="card-icon">⏳</div>
+            <div class="card-headline">Manual BI Fatigue</div>
+            <div class="card-desc">Users waste hours selecting columns, configuring chart axes, and tweaking pivot tables before seeing answers.</div>
+          </div>
+          <div class="point-card">
+            <div class="card-icon">🧹</div>
+            <div class="card-headline">Dirty & Complex Files</div>
+            <div class="card-desc">Missing cells, duplicate rows, multi-sheet Excel files, and nested JSON break standard data tools.</div>
+          </div>
+          <div class="point-card">
+            <div class="card-icon">🤖</div>
+            <div class="card-headline">AI Hallucinations</div>
+            <div class="card-desc">General LLMs invent statistical numbers, averages, and fake correlations without mathematical grounding.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="speaker-cue">🎙️ <b>Presenter Note:</b> Emphasize: People don't want to configure tools; they want immediate, trusted answers.</div>
+        <div class="slide-number">02 / 10</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: Solution -->
+    <div class="slide">
+      <div>
+        <div class="slide-tag">💡 The Solution</div>
+        <h2 class="slide-title">The Autonomous Data Analyst</h2>
+      </div>
+
+      <div class="slide-content">
+        <div class="grid-cards">
+          <div class="point-card">
+            <div class="card-icon">⚡</div>
+            <div class="card-headline">Zero-Config Profiling</div>
+            <div class="card-desc">Instant inspection of dimensions, data health, column types, and true semantic meanings upon upload.</div>
+          </div>
+          <div class="point-card">
+            <div class="card-icon">🛡️</div>
+            <div class="card-headline">100% Deterministic Math</div>
+            <div class="card-desc">Pearson correlations, IQR outlier fences, and standard deviations are computed in audited code, never guessed.</div>
+          </div>
+          <div class="point-card">
+            <div class="card-icon">📑</div>
+            <div class="card-headline">Executive PDF Dossier</div>
+            <div class="card-desc">Ready-to-share board reports featuring page-by-page visual analytics and executive summaries in seconds.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="speaker-cue">🎙️ <b>Presenter Note:</b> DataLens AI acts like a hired junior data analyst working at the speed of light.</div>
+        <div class="slide-number">03 / 10</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Architecture -->
+    <div class="slide">
+      <div>
+        <div class="slide-tag">🏛️ System Architecture</div>
+        <h2 class="slide-title">Deterministic Math + Semantic AI</h2>
+      </div>
+
+      <div class="slide-content">
+        <div class="grid-cards-2">
+          <div class="point-card" style="border-left: 4px solid var(--accent);">
+            <div class="card-headline" style="color: var(--accent);">1. Deterministic Calculation Core</div>
+            <div class="card-desc">
+              • Ingests CSV, TSV, JSON, XLSX sheets.<br>
+              • Computes min, max, mean, median, IQR, Pearson r.<br>
+              • <b>Guarantees 0% numerical hallucination.</b>
+            </div>
+          </div>
+          <div class="point-card" style="border-left: 4px solid var(--primary);">
+            <div class="card-headline" style="color: var(--primary);">2. AI Semantic Synthesizer</div>
+            <div class="card-desc">
+              • Receives verified calculations only.<br>
+              • Translates numbers into plain English narratives.<br>
+              • Explains business impacts & limitations clearly.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="speaker-cue">🎙️ <b>Presenter Note:</b> Key rule: The LLM never computes math; it strictly explains verified facts.</div>
+        <div class="slide-number">04 / 10</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: 1-Click Data Quality -->
+    <div class="slide">
+      <div>
+        <div class="slide-tag">🧼 Automated Hygiene</div>
+        <h2 class="slide-title">1-Click Automated Data Quality</h2>
+      </div>
+
+      <div class="slide-content">
+        <div class="grid-cards">
+          <div class="point-card">
+            <div class="card-icon">🔎</div>
+            <div class="card-headline">Intelligent Audit</div>
+            <div class="card-desc">Scans for duplicate records, missing cells, type inconsistencies, and IQR distribution anomalies.</div>
+          </div>
+          <div class="point-card">
+            <div class="card-icon">🪄</div>
+            <div class="card-headline">1-Click Batch Fixes</div>
+            <div class="card-desc">Recommends context-aware fixes (mean/median imputations, purge duplicates) applied with one button.</div>
+          </div>
+          <div class="point-card">
+            <div class="card-icon">↩️</div>
+            <div class="card-headline">100% Reversible</div>
+            <div class="card-desc">Never silently deletes data. Full undo/reset preserves raw records for auditable data lineage.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="speaker-cue">🎙️ <b>Presenter Note:</b> Data cleaning takes 80% of analyst time. Here, it takes exactly one click.</div>
+        <div class="slide-number">05 / 10</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: Visual Analytics -->
+    <div class="slide">
+      <div>
+        <div class="slide-tag">📊 Dynamic Visualizations</div>
+        <h2 class="slide-title">Context-Aware Visual Analytics</h2>
+      </div>
+
+      <div class="slide-content">
+        <div class="grid-cards">
+          <div class="point-card">
+            <div class="card-icon">🍩</div>
+            <div class="card-headline">Adaptive Charts</div>
+            <div class="card-desc">Auto-selects donuts for compositions, clustered bars for comparisons, and histograms for distributions.</div>
+          </div>
+          <div class="point-card">
+            <div class="card-icon">🎨</div>
+            <div class="card-headline">Clean Pastel Aesthetic</div>
+            <div class="card-desc">Designed with soft sage, cream, coral accents, and floating dock capsules for executive readability.</div>
+          </div>
+          <div class="point-card">
+            <div class="card-icon">📈</div>
+            <div class="card-headline">Bivariate Correlations</div>
+            <div class="card-desc">Scatter plots and correlation summaries highlight true driver relationships between key variables.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="speaker-cue">🎙️ <b>Presenter Note:</b> Charts are generated automatically based on column types and distribution shapes.</div>
+        <div class="slide-number">06 / 10</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Ask Your Data -->
+    <div class="slide">
+      <div>
+        <div class="slide-tag">💬 Conversational Intelligence</div>
+        <h2 class="slide-title">"Ask Your Data" Co-Pilot</h2>
+      </div>
+
+      <div class="slide-content">
+        <div class="grid-cards">
+          <div class="point-card">
+            <div class="card-icon">🗣️</div>
+            <div class="card-headline">Natural Questions</div>
+            <div class="card-desc">Ask "Which category generated top revenue?" or "Explain the dataset" in plain English.</div>
+          </div>
+          <div class="point-card">
+            <div class="card-icon">🔢</div>
+            <div class="card-headline">Evidence-Backed Answers</div>
+            <div class="card-desc">Every response includes verified mathematical proof cards and supporting data chips.</div>
+          </div>
+          <div class="point-card">
+            <div class="card-icon">🚫</div>
+            <div class="card-headline">Gibberish Protection</div>
+            <div class="card-desc">Rejects random or improper queries with "Please give the question properly." rather than hallucinating.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="speaker-cue">🎙️ <b>Presenter Note:</b> Point out the safety guardrails: it refuses to guess when given vague questions.</div>
+        <div class="slide-number">07 / 10</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: Executive PDF -->
+    <div class="slide">
+      <div>
+        <div class="slide-tag">📑 Executive Export</div>
+        <h2 class="slide-title">Multi-Page Executive PDF Report</h2>
+      </div>
+
+      <div class="slide-content">
+        <div class="grid-cards-2">
+          <div class="point-card">
+            <div class="card-headline">Executive Audit Dossier</div>
+            <div class="card-desc">
+              • Professional title page with metadata & file specs.<br>
+              • Complete Data Health & Missingness audit table.<br>
+              • Key findings & statistical observations.
+            </div>
+          </div>
+          <div class="point-card">
+            <div class="card-headline">Page-by-Page Visual Analytics</div>
+            <div class="card-desc">
+              • High-fidelity vector charts embedded directly.<br>
+              • Category comparisons, histograms, and trendlines.<br>
+              • Ready to send to stakeholders and board members.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="speaker-cue">🎙️ <b>Presenter Note:</b> No need to copy-paste screenshots into Word; 1 click generates the complete report.</div>
+        <div class="slide-number">08 / 10</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: Workflow Demo -->
+    <div class="slide">
+      <div>
+        <div class="slide-tag">🚀 User Journey</div>
+        <h2 class="slide-title">The 4-Step User Journey</h2>
+      </div>
+
+      <div class="slide-content">
+        <div class="grid-cards" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="point-card">
+            <div class="card-icon">1️⃣</div>
+            <div class="card-headline">Upload</div>
+            <div class="card-desc">Drag & drop CSV, TSV, JSON, or multi-sheet Excel file.</div>
+          </div>
+          <div class="point-card">
+            <div class="card-icon">2️⃣</div>
+            <div class="card-headline">Profile & Clean</div>
+            <div class="card-desc">View facts vs inferences & apply 1-click health fixes.</div>
+          </div>
+          <div class="point-card">
+            <div class="card-icon">3️⃣</div>
+            <div class="card-headline">Discover</div>
+            <div class="card-desc">Review automated pastel charts & AI insights.</div>
+          </div>
+          <div class="point-card">
+            <div class="card-icon">4️⃣</div>
+            <div class="card-headline">Ask & Export</div>
+            <div class="card-desc">Chat with data co-pilot and download executive PDF.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="speaker-cue">🎙️ <b>Presenter Note:</b> This slide summarizes the whole demo in under 30 seconds.</div>
+        <div class="slide-number">09 / 10</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: Conclusion & Impact -->
+    <div class="slide">
+      <div>
+        <div class="slide-tag">🎯 Impact & Summary</div>
+        <h2 class="slide-title">Why DataLens AI Wins</h2>
+      </div>
+
+      <div class="slide-content">
+        <div class="grid-cards">
+          <div class="point-card">
+            <div class="card-icon">⏱️</div>
+            <div class="card-headline">30 Min $\to$ 3 Sec</div>
+            <div class="card-desc">Reduces exploratory data analysis (EDA) time from half an hour to instantaneous.</div>
+          </div>
+          <div class="point-card">
+            <div class="card-icon">🔒</div>
+            <div class="card-headline">Privacy First</div>
+            <div class="card-desc">Local-first client execution. Sensitive spreadsheet rows are never sold or stored.</div>
+          </div>
+          <div class="point-card">
+            <div class="card-icon">📈</div>
+            <div class="card-headline">Trust & Verifiability</div>
+            <div class="card-desc">Zero AI guesswork. Every conclusion is backed by audited mathematical evidence.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="speaker-cue">🎙️ <b>Presenter Note:</b> Conclude with: DataLens AI brings trusted data intelligence to everyone. Thank you!</div>
+        <div class="slide-number">10 / 10</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation Pill -->
+  <div class="controls-bar">
+    <button class="btn-nav" id="prevBtn" title="Previous Slide (Left Arrow)">◀</button>
+    <div class="progress-dots" id="dotsContainer"></div>
+    <button class="btn-nav" id="nextBtn" title="Next Slide (Right Arrow or Space)">▶</button>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dotsContainer');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    let currentSlide = 0;
+
+    // Create progress dots
+    slides.forEach((_, idx) => {
+      const dot = document.createElement('div');
+      dot.className = `dot ${idx === 0 ? 'active' : ''}`;
+      dot.addEventListener('click', () => goToSlide(idx));
+      dotsContainer.appendChild(dot);
+    });
+
+    const dots = document.querySelectorAll('.dot');
+
+    function updateSlide() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      dots.forEach((d, idx) => {
+        d.classList.toggle('active', idx === currentSlide);
+      });
+    }
+
+    function goToSlide(n) {
+      currentSlide = Math.max(0, Math.min(n, slides.length - 1));
+      updateSlide();
+    }
+
+    function nextSlide() {
+      if (currentSlide < slides.length - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    nextBtn.addEventListener('click', nextSlide);
+    prevBtn.addEventListener('click', prevSlide);
+
+    // Keyboard support
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSlide();
+      }
+    });
+  </script>
+</body>
+</html>
